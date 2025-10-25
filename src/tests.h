@@ -16,6 +16,8 @@ public:
     static void testC432();
     static void testC880();
     static void testC6288_8();
+    static void testC6288_9();
+    static void testC6288_10();
     static void testC6288_12();
 };
 

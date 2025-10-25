@@ -124,6 +124,14 @@ void Tests::testC6288_12() {
     HardwareBenchmarks::c6288_12();
 }
 
+void Tests::testC6288_9() {
+    HardwareBenchmarks::c6288_9();
+}
+
+void Tests::testC6288_10() {
+    HardwareBenchmarks::c6288_10();
+}
+
 void RunInit() {
     G_CFLOBDDNodeHandle::InitLeafNodes();
     G_CFLOBDDNodeHandle::InitReduceCache();
@@ -152,6 +160,10 @@ void Tests::runTests(std::string testName) {
         testC880();
     } else if (testName == "testC6288_8") {
         testC6288_8();
+    } else if (testName == "testC6288_9") {
+        testC6288_9();
+    } else if (testName == "testC6288_10") {
+        testC6288_10();
     } else if (testName == "testC6288_12") {
         testC6288_12();
     } else {

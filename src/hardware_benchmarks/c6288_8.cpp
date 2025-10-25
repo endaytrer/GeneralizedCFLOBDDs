@@ -12,33 +12,50 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c6288_8() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    // std::vector<std::string> productions = {
+    //     "S 15 -> S 0 S 14", // 16
+    //     "S 14 -> S 0 S 13", // 15
+    //     "S 13 -> S 0 S 12", // 14
+    //     "S 12 -> S 0 S 11", // 13
+    //     "S 11 -> S 0 S 10", // 12
+    //     "S 10 -> S 0 S 9", // 11
+    //     "S 9 -> S 0 S 8", // 10
+    //     "S 8 -> S 0 S 7", // 9
+    //     "S 7 -> S 0 S 6", // 8
+    //     "S 6 -> S 0 S 5", // 7
+    //     "S 5 -> S 0 S 4", // 6
+    //     "S 4 -> S 0 S 3", // 5
+    //     "S 3 -> S 0 S 2", // 4
+    //     "S 2 -> S 0 S 1", // 3
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a" // 1
+    // };
+
     std::vector<std::string> productions = {
-        "S 15 -> S 0 S 14", // 16
-        "S 14 -> S 0 S 13", // 15
-        "S 13 -> S 0 S 12", // 14
-        "S 12 -> S 0 S 11", // 13
-        "S 11 -> S 0 S 10", // 12
-        "S 10 -> S 0 S 9", // 11
-        "S 9 -> S 0 S 8", // 10
-        "S 8 -> S 0 S 7", // 9
-        "S 7 -> S 0 S 6", // 8
-        "S 6 -> S 0 S 5", // 7
-        "S 5 -> S 0 S 4", // 6
-        "S 4 -> S 0 S 3", // 5
-        "S 3 -> S 0 S 2", // 4
-        "S 2 -> S 0 S 1", // 3
-        "S 1 -> S 0 S 0", // 2
+        "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 16
         "S 0 -> a" // 1
     };
-    grammar->constructGrammar(productions, "S 15");
+    // std::vector<std::string> productions = {
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a" // 1
+    // };
+    grammar->constructGrammar(productions, "S 1");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
     int coeff = 1;
     int offset = 0;
-    int max_level = 15;
+    int max_level = 1;
 
+    #define DESCENDING_NONINTERLEAVED 1
+    // #define DESCENDING_INTERLEAVED 0
+    // #define AMANO_8BIT_OPTIMAL 1
+
+    #ifdef DESCENDING_NONINTERLEAVED
     G_CFLOBDD a7 = MkProjection(coeff*0 + offset, max_level, grammar);
     G_CFLOBDD a6 = MkProjection(coeff*1 + offset, max_level, grammar);
     G_CFLOBDD a5 = MkProjection(coeff*2 + offset, max_level, grammar);
@@ -55,6 +72,46 @@ void HardwareBenchmarks::c6288_8() {
     G_CFLOBDD b2 = MkProjection(coeff*13 + offset, max_level, grammar);
     G_CFLOBDD b1 = MkProjection(coeff*14 + offset, max_level, grammar);
     G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
+    #endif
+
+    // #ifdef DESCENDING_INTERLEAVED
+    // G_CFLOBDD a7 = MkProjection(coeff*0 + offset, max_level, grammar);
+    // G_CFLOBDD b7 = MkProjection(coeff*1 + offset, max_level, grammar);
+    // G_CFLOBDD a6 = MkProjection(coeff*2 + offset, max_level, grammar);
+    // G_CFLOBDD b6 = MkProjection(coeff*3 + offset, max_level, grammar);
+    // G_CFLOBDD a5 = MkProjection(coeff*4 + offset, max_level, grammar);
+    // G_CFLOBDD b5 = MkProjection(coeff*5 + offset, max_level, grammar);
+    // G_CFLOBDD a4 = MkProjection(coeff*6 + offset, max_level, grammar);
+    // G_CFLOBDD b4 = MkProjection(coeff*7 + offset, max_level, grammar);
+    // G_CFLOBDD a3 = MkProjection(coeff*8 + offset, max_level, grammar);
+    // G_CFLOBDD b3 = MkProjection(coeff*9 + offset, max_level, grammar);
+    // G_CFLOBDD a2 = MkProjection(coeff*10 + offset, max_level, grammar);
+    // G_CFLOBDD b2 = MkProjection(coeff*11 + offset, max_level, grammar);
+    // G_CFLOBDD a1 = MkProjection(coeff*12 + offset, max_level, grammar);
+    // G_CFLOBDD b1 = MkProjection(coeff*13 + offset, max_level, grammar);
+    // G_CFLOBDD a0 = MkProjection(coeff*14 + offset, max_level, grammar);
+    // G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
+    // #endif
+
+    #ifdef AMANO_8BIT_OPTIMAL
+    G_CFLOBDD a1 = MkProjection(coeff*0 + offset, max_level, grammar);
+    G_CFLOBDD a2 = MkProjection(coeff*1 + offset, max_level, grammar);
+    G_CFLOBDD a3 = MkProjection(coeff*2 + offset, max_level, grammar);
+    G_CFLOBDD a4 = MkProjection(coeff*3 + offset, max_level, grammar);
+    G_CFLOBDD b3 = MkProjection(coeff*4 + offset, max_level, grammar);
+    G_CFLOBDD b4 = MkProjection(coeff*5 + offset, max_level, grammar);
+    G_CFLOBDD b2 = MkProjection(coeff*6 + offset, max_level, grammar);
+    G_CFLOBDD a5 = MkProjection(coeff*7 + offset, max_level, grammar);
+    G_CFLOBDD b5 = MkProjection(coeff*8 + offset, max_level, grammar);
+    G_CFLOBDD b1 = MkProjection(coeff*9 + offset, max_level, grammar);
+    G_CFLOBDD a6 = MkProjection(coeff*10 + offset, max_level, grammar);
+    G_CFLOBDD b6 = MkProjection(coeff*11 + offset, max_level, grammar);
+    G_CFLOBDD a0 = MkProjection(coeff*12 + offset, max_level, grammar);
+    G_CFLOBDD b7 = MkProjection(coeff*13 + offset, max_level, grammar);
+    G_CFLOBDD a7 = MkProjection(coeff*14 + offset, max_level, grammar);
+    G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
+    #endif
+
 
     std::cout << "	pp0_0	 " << std::endl;
     G_CFLOBDD	pp0_0	 = MkAnd(a0, b0);
@@ -725,4 +782,6 @@ void HardwareBenchmarks::c6288_8() {
     std::cout << "Total Nodes: " << totalNodes << std::endl;
     std::cout << "Total Edges: " << totalEdges << std::endl;
     std::cout << "Total Count: " << (totalNodes + totalEdges) << std::endl;
+
+    std::cout << nodeCount[15] << " " << edgeCount[15] << " " << (nodeCount[15] + edgeCount[15]) << std::endl;
 }

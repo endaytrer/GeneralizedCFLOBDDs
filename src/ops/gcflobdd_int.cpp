@@ -49,7 +49,6 @@ G_CFLOBDD MkFalse(int level, const std::shared_ptr<Grammar>& grammar)
 // Create representation of \x.x_i
 G_CFLOBDD MkProjection(unsigned int i, int level, const std::shared_ptr<Grammar>& grammar)
 {
-  assert(i < (1 << G_CFLOBDD::maxLevel));   // i.e., i < 2**maxLevel
   return G_CFLOBDD(MkDistinction(i, level, grammar));
 }
 

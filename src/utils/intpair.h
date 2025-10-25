@@ -19,6 +19,11 @@ class intpair {
 		  return 117 * (p.First() + 1) + p.Second();
 	  }
   };
+  struct intpair_equal {
+	  size_t operator()(const intpair& p1, const intpair& p2) const {
+		  return (p1.First() == p2.First()) && (p1.Second() == p2.Second());
+	  }
+  };
  private:
   int first;
   int second;

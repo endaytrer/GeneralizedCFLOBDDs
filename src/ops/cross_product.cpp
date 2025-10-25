@@ -406,18 +406,23 @@ G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
                                                        tempMapHandle);
             // Fill in n->connections[layer].returnMapHandle
             G_CFLOBDDReturnMapHandle n_returnHandle;
+            std::unordered_map<intpair, int, intpair::intpair_hash, intpair::intpair_equal> tempMap;
             for (unsigned int k = 0; k < tempMapHandle.Size(); k++) {
                 auto first = tempMapHandle[k].First();
                 auto second = tempMapHandle[k].Second();
                 auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
                 auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
                 auto pair_index = intpair(adjusted_first, adjusted_second);
-                int index = newLayerMapHandle.Lookup(pair_index);
-                if (index == -1) {
-                    newLayerMapHandle.AddToEnd(pair_index);
-                    n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
-                } else {
-                    n_returnHandle.AddToEnd(index);
+                auto pi_it = tempMap.find(pair_index);
+                if (pi_it == tempMap.end()) {
+                  // Not found
+                  newLayerMapHandle.AddToEnd(pair_index);
+                  n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
+                  tempMap[pair_index] = newLayerMapHandle.Size() - 1;
+                }
+                else {
+                  // Found
+                  n_returnHandle.AddToEnd(pi_it->second);
                 }
             }
             n_returnHandle.Canonicalize();
@@ -507,7 +512,8 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
     // std::cout << "Output node:\n";
     // answer.print(std::cout);
     // std::cout << "\n";
-    pairProductCache.insert(std::make_pair(key1, PairProductMemo(answer, pairProductMapHandle)));
+    auto memo = PairProductMemo(answer, pairProductMapHandle);
+    pairProductCache.insert(std::make_pair(key1, memo));
     return answer;
   }
 }

@@ -14,16 +14,15 @@ using namespace std::chrono;
 void HardwareBenchmarks::c880() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
     std::vector<std::string> productions = {
-        "S 7 -> S 3 S 6",
-        "S 6 -> S 2 S 5",
-        "S 5 -> S 2 S 4",
-        "S 4 -> S 1 S 3",
-        "S 3 -> S 1 S 2",
-        "S 2 -> S 0 S 1",
-        "S 1 -> S 0 S 0",
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
         "S 0 -> a"
     };
-    grammar->constructGrammar(productions, "S 7");
+    grammar->constructGrammar(productions, "S 6");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -532,4 +531,37 @@ void HardwareBenchmarks::c880() {
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start);
     cout << "Duration: " << duration.count() << " ms" << endl;
+
+    unsigned int nodeCount = 0, edgeCount = 0;
+    std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
+    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    gat388.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat389.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat390.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat391.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat418.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat419.GroupCountNodesAndEdges(nodeCount, edgeCount,  visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat420.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat421.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat422.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat423.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat446.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat447.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat448.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat449.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat450.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat767.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat768.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat850.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat863.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat864.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat865.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat866.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat874.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat878.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat879.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    gat880.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+
+    cout << "Total number of unique nodes: " << nodeCount << endl;
+    cout << "Total number of unique edges: " << edgeCount << endl;
 }

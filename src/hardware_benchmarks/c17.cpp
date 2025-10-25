@@ -13,21 +13,25 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c17() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    // std::vector<std::string> productions = {
+    //     "S 4 -> S 0 S 3",
+    //     "S 3 -> S 0 S 2",
+    //     "S 2 -> S 0 S 1",
+    //     "S 1 -> S 0 S 0",
+    //     "S 0 -> a"
+    // };
     std::vector<std::string> productions = {
-        "S 4 -> S 0 S 3",
-        "S 3 -> S 0 S 2",
-        "S 2 -> S 0 S 1",
-        "S 1 -> S 0 S 0",
+        "S 1 -> S 0 S 0 S 0 S 0 S 0",
         "S 0 -> a"
     };
-    grammar->constructGrammar(productions, "S 4");
+    grammar->constructGrammar(productions, "S 1");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     // Create G_CFLOBDD for c17 circuit
     auto start = high_resolution_clock::now();
 
-    int max_level = 4;
+    int max_level = 1;
 
     G_CFLOBDD gat1 = MkProjection(0, max_level, grammar);
     G_CFLOBDD gat2 = MkProjection(1, max_level, grammar);
@@ -54,6 +58,9 @@ void HardwareBenchmarks::c17() {
     totalNodeCount += nodeCount;
     totalEdgeCount += edgeCount;
 
+    gat23.print(std::cout);
+
     cout << "c17 G_CFLOBDD created in " << duration.count() << " milliseconds." << endl;
     cout << "Total Node Count: " << totalNodeCount << ", Total Edge Count: " << totalEdgeCount << endl;
+    cout << "Total Size (Nodes + Edges): " << totalNodeCount + totalEdgeCount << endl;
 }

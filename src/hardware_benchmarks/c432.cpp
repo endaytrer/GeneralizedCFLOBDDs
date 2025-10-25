@@ -13,45 +13,58 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c432() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    // std::vector<std::string> productions = {
+    //     "S 35 -> S 0 S 34",
+    //     "S 34 -> S 0 S 33",
+    //     "S 33 -> S 0 S 32",
+    //     "S 32 -> S 0 S 31",
+    //     "S 31 -> S 0 S 30",
+    //     "S 30 -> S 0 S 29",
+    //     "S 29 -> S 0 S 28",
+    //     "S 28 -> S 0 S 27",
+    //     "S 27 -> S 0 S 26",
+    //     "S 26 -> S 0 S 25",
+    //     "S 25 -> S 0 S 24",
+    //     "S 24 -> S 0 S 23",
+    //     "S 23 -> S 0 S 22",
+    //     "S 22 -> S 0 S 21",
+    //     "S 21 -> S 0 S 20",
+    //     "S 20 -> S 0 S 19",
+    //     "S 19 -> S 0 S 18",
+    //     "S 18 -> S 0 S 17",
+    //     "S 17 -> S 0 S 16",
+    //     "S 16 -> S 0 S 15",
+    //     "S 15 -> S 0 S 14",
+    //     "S 14 -> S 0 S 13",
+    //     "S 13 -> S 0 S 12",
+    //     "S 12 -> S 0 S 11",
+    //     "S 11 -> S 0 S 10",
+    //     "S 10 -> S 0 S 9",
+    //     "S 9 -> S 0 S 8",
+    //     "S 8 -> S 0 S 7",
+    //     "S 7 -> S 0 S 6",
+    //     "S 6 -> S 0 S 5",
+    //     "S 5 -> S 0 S 4",
+    //     "S 4 -> S 0 S 3",
+    //     "S 3 -> S 0 S 2",
+    //     "S 2 -> S 0 S 1",
+    //     "S 1 -> S 0 S 0",
+    //     "S 0 -> a"
+    // };
+    // std::vector<std::string> productions = {
+    //     "S 5 -> S 4 A 1", // 36
+    //     "A 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 20
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a"
+    // };
     std::vector<std::string> productions = {
-        "S 35 -> S 0 S 34",
-        "S 34 -> S 0 S 33",
-        "S 33 -> S 0 S 32",
-        "S 32 -> S 0 S 31",
-        "S 31 -> S 0 S 30",
-        "S 30 -> S 0 S 29",
-        "S 29 -> S 0 S 28",
-        "S 28 -> S 0 S 27",
-        "S 27 -> S 0 S 26",
-        "S 26 -> S 0 S 25",
-        "S 25 -> S 0 S 24",
-        "S 24 -> S 0 S 23",
-        "S 23 -> S 0 S 22",
-        "S 22 -> S 0 S 21",
-        "S 21 -> S 0 S 20",
-        "S 20 -> S 0 S 19",
-        "S 19 -> S 0 S 18",
-        "S 18 -> S 0 S 17",
-        "S 17 -> S 0 S 16",
-        "S 16 -> S 0 S 15",
-        "S 15 -> S 0 S 14",
-        "S 14 -> S 0 S 13",
-        "S 13 -> S 0 S 12",
-        "S 12 -> S 0 S 11",
-        "S 11 -> S 0 S 10",
-        "S 10 -> S 0 S 9",
-        "S 9 -> S 0 S 8",
-        "S 8 -> S 0 S 7",
-        "S 7 -> S 0 S 6",
-        "S 6 -> S 0 S 5",
-        "S 5 -> S 0 S 4",
-        "S 4 -> S 0 S 3",
-        "S 3 -> S 0 S 2",
-        "S 2 -> S 0 S 1",
-        "S 1 -> S 0 S 0",
+        "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 36
         "S 0 -> a"
     };
-    grammar->constructGrammar(productions, "S 35");
+    grammar->constructGrammar(productions, "S 1");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -59,7 +72,7 @@ void HardwareBenchmarks::c432() {
 
     int coeff = 1;
     int offset = 0;
-    int max_level = 36;
+    int max_level = 1;
 
     // Inputs
     G_CFLOBDD gat1 = MkProjection(coeff*0 + offset, max_level, grammar);
