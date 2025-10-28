@@ -130,6 +130,18 @@ namespace G_CFL_OBDD{
     }
 
     template <typename T>
+    void G_CFLOBDDTopNodeT<T>::PrintYield(std::ostream & out) const
+    {
+        std::vector<std::vector<std::string>> yield_strings;
+        rootConnection.entryPointHandle->handleContents->PrintYield(yield_strings);
+        for (unsigned int i = 0; i < yield_strings.size(); i++){
+            for (const auto& s : yield_strings[i]){
+                // out << s << " " << rootConnection.returnMapHandle.Lookup(i) << std::endl;
+            }
+        }
+    }
+
+    template <typename T>
     typename G_CFLOBDDTopNodeT<T>::G_CFLOBDDTopNodeTRefPtr
     // ApplyAndReduce -----------------------------------------------------
     ApplyAndReduce(typename G_CFLOBDDTopNodeT<T>::G_CFLOBDDTopNodeTRefPtr n1,

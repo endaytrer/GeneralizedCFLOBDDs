@@ -31,25 +31,25 @@ void HardwareBenchmarks::c6288_8() {
     //     "S 0 -> a" // 1
     // };
 
-    std::vector<std::string> productions = {
-        "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 16
-        "S 0 -> a" // 1
-    };
     // std::vector<std::string> productions = {
-    //     "S 4 -> S 3 S 3", // 16
-    //     "S 3 -> S 2 S 2", // 8
-    //     "S 2 -> S 1 S 1", // 4
-    //     "S 1 -> S 0 S 0", // 2
+    //     "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 16
     //     "S 0 -> a" // 1
     // };
-    grammar->constructGrammar(productions, "S 1");
+    std::vector<std::string> productions = {
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
+        "S 0 -> a" // 1
+    };
+    grammar->constructGrammar(productions, "S 4");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
     int coeff = 1;
     int offset = 0;
-    int max_level = 1;
+    int max_level = 4;
 
     #define DESCENDING_NONINTERLEAVED 1
     // #define DESCENDING_INTERLEAVED 0
@@ -536,6 +536,7 @@ void HardwareBenchmarks::c6288_8() {
     G_CFLOBDD	gate0_6_5	=  MkNor(gate0_6_3, gate0_6_4);
     G_CFLOBDD	gate0_6_6	=  MkNor(pp0_6, gate0_6_4);
     G_CFLOBDD	sum6	=  MkNor(gate0_6_5, gate0_6_6);
+    sum6.print(std::cout);
     G_CFLOBDD	c0_6	= MkNor(gate0_6_0,gate0_6_4); 
     G_CFLOBDD	gate1_6_0	=  MkNor(s2_5, c1_5);
     G_CFLOBDD	gate1_6_1	=  MkNor(s2_5, gate1_6_0);
@@ -753,24 +754,13 @@ void HardwareBenchmarks::c6288_8() {
 
     std::vector<unsigned int> nodeCount (16, 0);
     std::vector<unsigned int> edgeCount (16, 0);
-    std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
-    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
-    sum0.GroupCountNodesAndEdges(nodeCount[0], edgeCount[0], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum1.GroupCountNodesAndEdges(nodeCount[1], edgeCount[1], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum2.GroupCountNodesAndEdges(nodeCount[2], edgeCount[2], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum3.GroupCountNodesAndEdges(nodeCount[3], edgeCount[3], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum4.GroupCountNodesAndEdges(nodeCount[4], edgeCount[4], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum5.GroupCountNodesAndEdges(nodeCount[5], edgeCount[5], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum6.GroupCountNodesAndEdges(nodeCount[6], edgeCount[6], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum7.GroupCountNodesAndEdges(nodeCount[7], edgeCount[7], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum8.GroupCountNodesAndEdges(nodeCount[8], edgeCount[8], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum9.GroupCountNodesAndEdges(nodeCount[9], edgeCount[9], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum10.GroupCountNodesAndEdges(nodeCount[10], edgeCount[10], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum11.GroupCountNodesAndEdges(nodeCount[11], edgeCount[11], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum12.GroupCountNodesAndEdges(nodeCount[12], edgeCount[12], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum13.GroupCountNodesAndEdges(nodeCount[13], edgeCount[13], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum14.GroupCountNodesAndEdges(nodeCount[14], edgeCount[14], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    sum15.GroupCountNodesAndEdges(nodeCount[15], edgeCount[15], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    std::vector<G_CFLOBDD> sums = {sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7,
+                                   sum8, sum9, sum10, sum11, sum12, sum13, sum14, sum15};
+    // std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
+    // Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    // for (unsigned int i = 0; i < 16; i++) {
+    //     sums[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    // }
 
     unsigned int totalNodes = 0;
     unsigned int totalEdges = 0;
@@ -779,9 +769,13 @@ void HardwareBenchmarks::c6288_8() {
         totalEdges += edgeCount[i];
     }
 
+    for (unsigned int i = 0; i < 16; i++) {
+        unsigned int nodeCount = 0, edgeCount = 0;
+        sums[i].CountNodesAndEdges(nodeCount, edgeCount);
+        std::cout << "Sum " << i << ": Nodes = " << nodeCount << ", Edges = " << edgeCount << std::endl;
+    }
+
     std::cout << "Total Nodes: " << totalNodes << std::endl;
     std::cout << "Total Edges: " << totalEdges << std::endl;
     std::cout << "Total Count: " << (totalNodes + totalEdges) << std::endl;
-
-    std::cout << nodeCount[15] << " " << edgeCount[15] << " " << (nodeCount[15] + edgeCount[15]) << std::endl;
 }

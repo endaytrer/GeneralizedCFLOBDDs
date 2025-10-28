@@ -81,14 +81,21 @@ unsigned int ConnectionListTBody<T>::Hash(unsigned int modsize) const
 template <typename T>
 std::ostream& operator<< (std::ostream & out, const ConnectionListTBody<T> &r)
 {
-	out << "{CLB<T>: ";
+  unsigned int indentation_level = 5;
+  for (unsigned int i = 0; i < indentation_level; i++) {  // Indentation
+      out << "  ";
+  }
+	out << "{CLB<T>: \n";
 	size_t last = r.connections.size() - 1;
-	for(size_t i = 0; i <= last; ++i) {
+	for (size_t i = 0; i <= last; ++i) {
 		out << r.connections[i];
         if (i != last) 
             out << ", ";
     }
-	out << " CLB<T>}";
+  for (unsigned int i = 0; i < indentation_level; i++) {  // Indentation
+      out << "  ";
+  }
+	out << " CLB<T>}\n";
     return out;
 }
 
@@ -204,6 +211,16 @@ template <typename T>
 ConnectionT<T> ConnectionListTHandle<T>::Lookup(int x)
 {
 	return connectionList->connections[x];
+}
+
+template <typename T>
+long int ConnectionListTHandle<T>::LookupInv(ConnectionT<T>& y)
+{
+  for (unsigned int i = 0; i < connectionList->connections.size(); i++){
+      if (connectionList->connections[i] == y)
+          return i;
+  }
+  return -1;
 }
 
 template <typename T>

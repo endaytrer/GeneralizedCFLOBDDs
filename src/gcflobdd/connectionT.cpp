@@ -75,7 +75,13 @@ bool ConnectionT<Handle>::operator== (const ConnectionT<Handle> & C) const
 template <typename Handle>
 std::ostream& ConnectionT<Handle>::print(std::ostream & out) const
 {
+	for (unsigned int i = entryPointHandle->handleContents->level; i < 5; i++) {  // Indentation
+	    out << "  ";
+	}
 	out << (*entryPointHandle);
+	for (unsigned int i = entryPointHandle->handleContents->level; i < 5; i++) {  // Indentation
+	    out << "  ";
+	}
 	out << returnMapHandle;
 	return out;
 }

@@ -32,18 +32,15 @@ using namespace G_CFL_OBDD;
 
 // Initializations of static members ---------------------------------
 
-size_t G_CFLOBDDNodeHash::operator()(const std::weak_ptr<G_CFLOBDDNode>& c) const {
-    auto sp = c.lock();
-    return sp ? sp->Hash(997) : 0;  // expired nodes hash to 0
+size_t G_CFLOBDDNodeHash::operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const {
+  return c ? c->Hash(997) : 0;  // expired nodes hash to 0
 }
 
-bool G_CFLOBDDNodeEqual::operator()(const std::weak_ptr<G_CFLOBDDNode>& a,
-                                    const std::weak_ptr<G_CFLOBDDNode>& b) const {
+bool G_CFLOBDDNodeEqual::operator()(const std::shared_ptr<G_CFLOBDDNode>& a,
+                                    const std::shared_ptr<G_CFLOBDDNode>& b) const {
 
-    auto sp_a = a.lock();
-    auto sp_b = b.lock();
-    if (!sp_a || !sp_b) return false; // treat expired as unequal
-      return *sp_a == *sp_b;
+    if (!a || !b) return false; // treat expired as unequal
+      return *a == *b;
 }
 
 
@@ -77,7 +74,7 @@ bool NoDistinctionCacheKey::operator== (const NoDistinctionCacheKey& p) const {
 
 
 // Hashset<G_CFLOBDDNode> *G_CFLOBDDNodeHandle::canonicalNodeTable = new Hashset<G_CFLOBDDNode>(HASHSET_NUM_BUCKETS);
-std::unordered_set<std::weak_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> G_CFLOBDDNodeHandle::canonicalNodeTable;
+std::unordered_set<std::shared_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> G_CFLOBDDNodeHandle::canonicalNodeTable;
 G_CFLOBDDNodeHandle G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
 G_CFLOBDDNodeHandle G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
 std::unordered_map<NoDistinctionCacheKey, G_CFLOBDDNodeHandle, NoDistinctionCacheKey::NoDistinctionCacheKey_Hash, NoDistinctionCacheKey::NoDistinctionCacheKey_Equal> G_CFLOBDDNodeHandle::NoDistinctionNode;
@@ -109,7 +106,7 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(G_CFLOBDDNode *n)
   : handleContents(std::shared_ptr<G_CFLOBDDNode>(n))
 {
   assert(n != NULL);
-  // handleContents->IncrRef();
+  handleContents->IncrRef();
   Canonicalize();
 }
 
@@ -118,9 +115,9 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const G_CFLOBDDNodeHandle &c)
 {
   handleContents = c.handleContents;
   // std::cout << "handleContents use_count: " << handleContents.use_count() << std::endl;
-  // if (handleContents != NULL) {
-  //   handleContents->IncrRef();
-  // }
+  if (handleContents != NULL) {
+    handleContents->IncrRef();
+  }
 }
 
 // Constructor from shared_ptr
@@ -128,30 +125,27 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const std::shared_ptr<G_CFLOBDDNode>& n
   : handleContents(n)
 {
   assert(n != NULL);
-  // handleContents->IncrRef();
+  handleContents->IncrRef();
   Canonicalize();
 }
 
 G_CFLOBDDNodeHandle::~G_CFLOBDDNodeHandle()
 {
-  // if (handleContents != NULL) {
-  //   handleContents->DecrRef();
-  // }
-
-  // if (handleContents != NULL) {
-  //     auto it = canonicalNodeTable.find(handleContents);
-  //     if (it != canonicalNodeTable.end() && it->expired()) {
-  //         // Found expired node -> remove it lazily
-  //         canonicalNodeTable.erase(it);
-  //         return;
-  //     }
-  // }
+  if (handleContents != NULL) {
+    handleContents->DecrRef();
+    // if (handleContents->GetRefCount() == 0) {
+    //     // Found expired node -> remove it lazily
+    //     auto it = canonicalNodeTable.find(handleContents);
+    //     canonicalNodeTable.erase(it);
+    //     return;
+    // }
+  }
 }
 
 void G_CFLOBDDNodeHandle::GarbageCollectCanonicalNodeTable()
 {
     for (auto it = canonicalNodeTable.begin(); it != canonicalNodeTable.end(); ) {
-        if (it->expired()) {
+        if (it->use_count() == 1) { // only held by the canonical table
             it = canonicalNodeTable.erase(it);
         } else {
             ++it;
@@ -278,7 +272,6 @@ G_CFLOBDDNodeHandle G_CFLOBDDNodeHandle::Reduce(ReductionMapHandle& redMapHandle
 		reduceCache->Insert(CFLReduceKey(*this, redMapHandle), temp);
 		return temp;
 	}
-    return handleContents->Reduce(redMapHandle, replacementNumExits, forceReduce);
 }
 
 void G_CFLOBDDNodeHandle::InitReduceCache()
@@ -295,16 +288,13 @@ void G_CFLOBDDNodeHandle::DisposeOfReduceCache()
 // Canonicalization --------------------------------------------
 void G_CFLOBDDNodeHandle::Canonicalize()
 {
+  handleContents->SetHashCache(997, handleContents->Hash(997));
   auto it = canonicalNodeTable.find(handleContents);
   if (it != canonicalNodeTable.end()) {
-      if (auto sp = it->lock()) {
-          // Found live node -> reuse it
-          handleContents = sp;
-          return;
-      } else {
-          // Found expired node -> remove it lazily
-          canonicalNodeTable.erase(it);
-      }
+    handleContents->DecrRef();
+    (*it)->IncrRef();
+    handleContents = *it;
+    return;
   }
 
   // Not found -> insert this node as canonical
@@ -368,6 +358,14 @@ G_CFLOBDDNode::G_CFLOBDDNode(const unsigned int l)
 
 G_CFLOBDDNode::~G_CFLOBDDNode()
 {
+}
+
+void G_CFLOBDDNode::SetHashCache(unsigned int modsize,  unsigned int hashValue)
+{
+  if (modsize == 997) {
+    cachedHash_997 = hashValue;
+    hash_set_997 = true;
+  }
 }
 
 // print
@@ -441,7 +439,7 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
           G_CFLOBDDReturnMapHandle inducedReturnMap = ComposeAndReduce(conn.returnMapHandle, currentRedMapHandle, inducedRedMapHandle);
           G_CFLOBDDNodeHandle reducedNodeHandle = conn.entryPointHandle->Reduce(inducedRedMapHandle, inducedReturnMap.Size(), forceReduce);
           Connection newConn(reducedNodeHandle, inducedReturnMap);
-          auto currPositionInNextMap = nextRedMapHandle.Lookup(currPosition);
+          auto currPositionInNextMap = n->connections[layer].LookupInv(newConn);
           if (currPositionInNextMap != -1) {
               nextRedMapHandle.AddToEnd(currPositionInNextMap);
           }
@@ -465,6 +463,9 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
 
 unsigned int G_CFLOBDDInternalNode::Hash(unsigned int modsize) const
 {
+  if (modsize == 997 && hash_set_997) {
+    return cachedHash_997;
+  }
   unsigned int hvalue = 0;
   for (unsigned int j = 0; j < numLayers; j++) {
     hvalue = (997 * hvalue + connections[j].Hash(modsize)) % modsize;
@@ -510,32 +511,25 @@ void G_CFLOBDDInternalNode::DecrRef()
   //   }
   //   delete this;
   // }
-  // if (--refCount == 0) {    // Warning: Saturation not checked
-  //   if (isCanonical) {
-  //     // G_CFLOBDDNodeHandle::canonicalNodeTable->DeleteEq(this);
-  //     G_CFLOBDDNodeHandle::canonicalNodeTable.erase(std::shared_ptr<G_CFLOBDDNode>(this));
-  //   }
-  //   delete this;
-  // }
+  --refCount;
 }
 
 // print
 std::ostream& G_CFLOBDDInternalNode::print(std::ostream & out) const
 {
+    unsigned int indentation_level = 5;
     unsigned int i, j;
-    // for (i = level; i < 5; i++) {  // Indentation
-    //     out << "  ";
-    // }
-    out << "Level: " << level << std::endl;
+    
     for (j = 0; j < numLayers; j++) {
-	    // for (i = level; i < 5; i++) {  // Indentation
-	    //     out << "  ";
-        // }
+	    for (i = level; i < indentation_level; i++) {  // Indentation
+	        out << "  ";
+        }
+        out << "Level: " << level << " ";
         out << "Layer[" << j << "]:" << std::endl;
-		connections[j].print(out);
-		// for (i = level; i < 5; i++) {  // Indentation
-        //     out << "  ";
-        // }
+		    connections[j].print(out);
+		  for (i = level; i < indentation_level; i++) {  // Indentation
+            out << "  ";
+        }
     }
     return out;
 }
@@ -553,10 +547,21 @@ void G_CFLOBDDInternalNode::CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*
         conn.entryPointHandle->handleContents->CountNodesAndEdges(visitedNodes, visitedEdges, nodeCount, edgeCount);
         if (visitedEdges->Lookup(conn.returnMapHandle.mapContents) == NULL) {
           visitedEdges->Insert(conn.returnMapHandle.mapContents);
-          edgeCount++;
+          edgeCount += conn.returnMapHandle.Size();
         }
       }
-      edgeCount++; // for the connection from this node to the layer
+      edgeCount += connections[layer].Size(); // for the connections from this node to the layer
+    }
+  }
+}
+
+void G_CFLOBDDInternalNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+{
+  for (unsigned int layer = 0; layer < numLayers; layer++) {
+    for (unsigned int i = 0; i < connections[layer].Size(); i++)
+    {
+        Connection conn = connections[layer][i];
+        conn.entryPointHandle->handleContents->PrintYield(yield_strings);
     }
   }
 }
@@ -659,6 +664,11 @@ bool G_CFLOBDDForkNode::operator== (const G_CFLOBDDNode & n) const
   return n.NodeKind() == G_CFLOBDD_FORK;
 }
 
+void G_CFLOBDDForkNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+{
+    yield_strings.push_back({"0", "1"});
+}
+
 //********************************************************************
 // G_CFLOBDDDontCareNode
 //********************************************************************
@@ -708,4 +718,9 @@ bool G_CFLOBDDDontCareNode::operator!= (const G_CFLOBDDNode & n) const
 bool G_CFLOBDDDontCareNode::operator== (const G_CFLOBDDNode & n) const
 {
   return n.NodeKind() == G_CFLOBDD_DONTCARE;
+}
+
+void G_CFLOBDDDontCareNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+{
+    yield_strings.push_back({"*"});
 }

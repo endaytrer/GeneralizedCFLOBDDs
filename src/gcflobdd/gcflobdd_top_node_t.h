@@ -43,6 +43,7 @@ class G_CFLOBDDTopNodeT {
   std::ostream& print(std::ostream & out = std::cout) const;
   void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+  void PrintYield(std::ostream & out = std::cout) const;
 
   // Usage: G_CFLOBDDTopNodeT<T>::G_CFLOBDDTopNodeTRefPtr
   typedef ref_ptr<G_CFLOBDDTopNodeT<T>> G_CFLOBDDTopNodeTRefPtr;

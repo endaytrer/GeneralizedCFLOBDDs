@@ -52,12 +52,12 @@ namespace G_CFL_OBDD {
 namespace G_CFL_OBDD {
   struct G_CFLOBDDNodeHash {
   public:
-    size_t operator()(const std::weak_ptr<G_CFLOBDDNode>& c) const;
+    size_t operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const;
   };
 
   struct G_CFLOBDDNodeEqual {
   public:
-    bool operator()(const std::weak_ptr<G_CFLOBDDNode>& a, const std::weak_ptr<G_CFLOBDDNode>& b) const;
+    bool operator()(const std::shared_ptr<G_CFLOBDDNode>& a, const std::shared_ptr<G_CFLOBDDNode>& b) const;
   };
 }
 
@@ -124,7 +124,8 @@ class G_CFLOBDDNodeHandle {
  // Table of canonical nodes -------------------------
     public:
     //  static Hashset<G_CFLOBDDNode> *canonicalNodeTable;
-     static std::unordered_set<std::weak_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> canonicalNodeTable;
+    //  static std::unordered_set<std::weak_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> canonicalNodeTable;
+     static std::unordered_set<std::shared_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> canonicalNodeTable;
      void Canonicalize();
      static void GarbageCollectCanonicalNodeTable();
 
@@ -220,8 +221,12 @@ class G_CFLOBDDNode {
   virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
   virtual void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount) = 0;
+  virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
   const unsigned int level;
   std::shared_ptr<GrammarNode> grammar;
+  unsigned int cachedHash_997 = 0;
+  bool hash_set_997 = false;
+  void SetHashCache(unsigned int modsize,  unsigned int hashValue);
  protected:
   unsigned int refCount;
   bool isCanonical;              // Is this CFLOBDDNode in canonicalNodeTable?
@@ -255,6 +260,7 @@ class G_CFLOBDDInternalNode : public G_CFLOBDDNode {
   std::ostream& print(std::ostream & out = std::cout) const;
   void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges, 
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
 
   unsigned int numLayers;
   ConnectionList *connections; // layers 1 ... numLayers
@@ -284,9 +290,10 @@ class G_CFLOBDDLeafNode : public G_CFLOBDDNode {
   void DecrRef();
 
  public:
-	 virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
-   void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges, 
+	virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
+  void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges, 
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+  virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
 };
 
 //********************************************************************
@@ -304,7 +311,8 @@ class G_CFLOBDDForkNode : public G_CFLOBDDLeafNode {
   bool operator== (const G_CFLOBDDNode & n) const;        // Overloaded ==
 
  public:
-	 std::ostream& print(std::ostream & out = std::cout) const;
+	std::ostream& print(std::ostream & out = std::cout) const;
+  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
 
  private:
   G_CFLOBDDForkNode(const G_CFLOBDDForkNode &n);   // Copy constructor (hidden)
@@ -326,7 +334,8 @@ class G_CFLOBDDDontCareNode : public G_CFLOBDDLeafNode {
   bool operator== (const G_CFLOBDDNode & n) const;        // Overloaded ==
 
  public:
-	 std::ostream& print(std::ostream & out = std::cout) const;
+	std::ostream& print(std::ostream & out = std::cout) const;
+  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
 
  private:
   G_CFLOBDDDontCareNode(const G_CFLOBDDDontCareNode &n);   // Copy constructor (hidden)

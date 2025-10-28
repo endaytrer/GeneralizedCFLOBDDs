@@ -29,6 +29,7 @@ class G_CFLOBDD_T {
   void CountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount);
   void GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, std::unordered_set<G_CFLOBDDNode*>& visitedNodesDuringGroupCountNodesAndEdges,
 	  Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges);
+  void PrintYield(std::ostream & out = std::cout) const;
 
  public:
 	std::ostream& print(std::ostream & out = std::cout) const;
@@ -111,6 +112,12 @@ std::ostream& operator<< (std::ostream & out, const G_CFLOBDD_T<T> &d)
 {
 	d.print(out);
 	return(out);
+}
+
+template<typename T>
+void G_CFLOBDD_T<T>::PrintYield(std::ostream & out) const
+{
+	root->PrintYield(out);
 }
 
 // Linear operations -----------------------------------------------

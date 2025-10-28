@@ -31,6 +31,7 @@ class ConnectionListTHandle {
   unsigned int Size();
   void AddConnection(ConnectionT<T>& y);
   ConnectionT<T> Lookup(int x);
+  long int LookupInv(ConnectionT<T>& y);
   void Canonicalize();
   ConnectionListTBody<T> *connectionList;
   static Hashset<ConnectionListTBody<T>> *canonicalConnectionListTBodySet;

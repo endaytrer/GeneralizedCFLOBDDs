@@ -51,20 +51,20 @@ void HardwareBenchmarks::c432() {
     //     "S 1 -> S 0 S 0",
     //     "S 0 -> a"
     // };
-    // std::vector<std::string> productions = {
-    //     "S 5 -> S 4 A 1", // 36
-    //     "A 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 20
-    //     "S 4 -> S 3 S 3", // 16
-    //     "S 3 -> S 2 S 2", // 8
-    //     "S 2 -> S 1 S 1", // 4
-    //     "S 1 -> S 0 S 0", // 2
-    //     "S 0 -> a"
-    // };
     std::vector<std::string> productions = {
-        "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 36
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
         "S 0 -> a"
     };
-    grammar->constructGrammar(productions, "S 1");
+    // std::vector<std::string> productions = {
+    //     "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 36
+    //     "S 0 -> a"
+    // };
+    grammar->constructGrammar(productions, "S 6");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -72,7 +72,7 @@ void HardwareBenchmarks::c432() {
 
     int coeff = 1;
     int offset = 0;
-    int max_level = 1;
+    int max_level = 6;
 
     // Inputs
     G_CFLOBDD gat1 = MkProjection(coeff*0 + offset, max_level, grammar);

@@ -5,13 +5,30 @@
 #include "ops/gcflobdd_int.h"
 #include "visualization/visualize.h"
 #include "hardware_benchmarks/hardware_tests.h"
+#include <chrono>
 using namespace G_CFL_OBDD;
 using namespace std;
+using namespace std::chrono;
 
 std::shared_ptr<Grammar> generateSampleGrammar() {
     std::vector<std::string> productions = {
         "S 3 -> S 0 S 2",
         "S 2 -> S 0 S 1",
+        "S 1 -> S 0 S 0",
+        "S 0 -> a"
+    };
+
+    Grammar grammar;
+    grammar.constructGrammar(productions, "S 3");
+    grammar.InstallNumVars();
+    grammar.updateLevel();
+    return std::make_shared<Grammar>(grammar);
+}
+
+std::shared_ptr<Grammar> generateBalancedSampleGrammar() {
+    std::vector<std::string> productions = {
+        "S 3 -> S 2 S 2",
+        "S 2 -> S 1 S 1",
         "S 1 -> S 0 S 0",
         "S 0 -> a"
     };
@@ -104,6 +121,90 @@ void Tests::testCrossProduct() {
 
 }
 
+void Tests::testNand() {
+    std::shared_ptr<Grammar> grammar = generateBalancedSampleGrammar();
+    G_CFLOBDD x0 = MkProjection(0, 3, grammar);
+    G_CFLOBDD x1 = MkProjection(2, 3, grammar);
+    G_CFLOBDD x0_nand_x1 = MkNand(x0, x1);
+    PrintCFLOBDD(x0_nand_x1);
+}
+
+void Tests::testRandomFunction() {
+	std::cout << "Random start..." << std::endl;
+
+    // std::vector<std::string> productions = {
+    //     // "S 10 -> S 9 S 9 S 9", // 59049
+    //     // "S 9 -> S 8 S 8 S 8", // 19683
+    //     // "S 8 -> S 7 S 7 S 7", // 6561
+    //     "S 7 -> S 6 S 6 S 6", // 2187
+    //     "S 6 -> S 5 S 5 S 5", // 729
+    //     "S 5 -> S 4 S 4 S 4", // 243
+    //     "S 4 -> S 3 S 3 S 3", // 81
+    //     "S 3 -> S 2 S 2 S 2", // 27
+    //     "S 2 -> S 1 S 1 S 1", // 9
+    //     "S 1 -> S 0 S 0 S 0", // 3
+    //     "S 0 -> a"
+    // };
+
+    std::vector<std::string> productions = {
+        // "S 16 -> S 15 S 15", // 65536
+        // "S 15 -> S 14 S 14", // 32768
+        // "S 14 -> S 13 S 13", // 16384
+        "S 13 -> S 12 S 12", // 8192
+        "S 12 -> S 11 S 11", // 4096
+        "S 11 -> S 10 S 10", // 2048
+        "S 10 -> S 9 S 9", // 1024
+        "S 9 -> S 8 S 8", // 512
+        "S 8 -> S 7 S 7", // 256
+        "S 7 -> S 6 S 6", // 128
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
+        "S 0 -> a"
+    };
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(productions, "S 13");
+    grammar->InstallNumVars();
+    grammar->updateLevel();
+
+	auto start = high_resolution_clock::now();
+	unsigned int numVars = std::pow(3, 8); // 59049
+	unsigned int level = 13;
+	std::vector<G_CFLOBDD> vars;
+	for (unsigned int i = 0; i < numVars; i++) {
+		vars.push_back(MkProjection(i, level, grammar));
+	}
+
+	G_CFLOBDD F = MkTrue(level, grammar);
+	for (unsigned int i = 0; i < numVars / 3; i++) {
+		unsigned int a = 3 * i;
+		unsigned int b = 3 * i + 1;;
+		unsigned int c = 3 * i + 2;
+		G_CFLOBDD A = vars[a];
+		G_CFLOBDD B = vars[b];
+		G_CFLOBDD C = vars[c];
+		G_CFLOBDD A_and_B = MkAnd(A, B);
+		G_CFLOBDD Not_A = MkNot(A);
+		G_CFLOBDD Not_A_and_C = MkAnd(Not_A, C);
+		G_CFLOBDD A_and_B_or_Not_A_and_C = MkOr(A_and_B, Not_A_and_C);
+		F = MkAnd(F, A_and_B_or_Not_A_and_C);
+	}
+
+	auto end = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(end - start);
+	std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+
+	unsigned int nodeCount = 0, edgeCount = 0;
+
+	F.CountNodesAndEdges(nodeCount, edgeCount);
+	std::cout << "nodeCount: " << nodeCount << " edgeCount: " << edgeCount << " totalCount: " << (nodeCount + edgeCount) << std::endl;
+
+}
+
 void Tests::testC17() {
     HardwareBenchmarks::c17();
 }
@@ -152,6 +253,10 @@ void Tests::runTests(std::string testName) {
         testMkNot();
     } else if (testName == "testCrossProduct") {
         testCrossProduct();
+    } else if (testName == "testNand") {
+        testNand();
+    } else if (testName == "testRandomFunction") {
+        testRandomFunction();
     } else if (testName == "testC17") {
         testC17();
     } else if (testName == "testC432") {

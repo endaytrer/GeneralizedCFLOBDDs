@@ -12,6 +12,8 @@ public:
     static void testDataVisualization();
     static void testMkNot();
     static void testCrossProduct();
+    static void testNand();
+    static void testRandomFunction();
     static void testC17();
     static void testC432();
     static void testC880();
