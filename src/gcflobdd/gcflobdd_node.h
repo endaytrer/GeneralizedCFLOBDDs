@@ -49,17 +49,17 @@ namespace G_CFL_OBDD {
   class G_CFLOBDDDontCareNode;
 }
 
-namespace G_CFL_OBDD {
-  struct G_CFLOBDDNodeHash {
-  public:
-    size_t operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const;
-  };
+// namespace G_CFL_OBDD {
+//   struct G_CFLOBDDNodeHash {
+//   public:
+//     size_t operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const;
+//   };
 
-  struct G_CFLOBDDNodeEqual {
-  public:
-    bool operator()(const std::shared_ptr<G_CFLOBDDNode>& a, const std::shared_ptr<G_CFLOBDDNode>& b) const;
-  };
-}
+//   struct G_CFLOBDDNodeEqual {
+//   public:
+//     bool operator()(const std::shared_ptr<G_CFLOBDDNode>& a, const std::shared_ptr<G_CFLOBDDNode>& b) const;
+//   };
+// }
 
 namespace G_CFL_OBDD {
   class NoDistinctionCacheKey {
@@ -104,7 +104,6 @@ class G_CFLOBDDNodeHandle {
   G_CFLOBDDNodeHandle();                                        // Default constructor
   G_CFLOBDDNodeHandle(G_CFLOBDDNode *n);                          // Constructor
   G_CFLOBDDNodeHandle(const G_CFLOBDDNodeHandle &nh);              // Copy constructor
-  G_CFLOBDDNodeHandle(const std::shared_ptr<G_CFLOBDDNode>& n); // Constructor from shared_ptr
   ~G_CFLOBDDNodeHandle();                                       // Destructor
   unsigned int Hash(unsigned int modsize) const;
   bool operator!= (const G_CFLOBDDNodeHandle &nh) const;              // Overloaded !=
@@ -119,13 +118,11 @@ class G_CFLOBDDNodeHandle {
       static std::unordered_map<NoDistinctionCacheKey, G_CFLOBDDNodeHandle, NoDistinctionCacheKey::NoDistinctionCacheKey_Hash, NoDistinctionCacheKey::NoDistinctionCacheKey_Equal> NoDistinctionNode;
 	  
   // The data member
-    std::shared_ptr<G_CFLOBDDNode> handleContents;
+    G_CFLOBDDNode* handleContents;
 
  // Table of canonical nodes -------------------------
     public:
-    //  static Hashset<G_CFLOBDDNode> *canonicalNodeTable;
-    //  static std::unordered_set<std::weak_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> canonicalNodeTable;
-     static std::unordered_set<std::shared_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> canonicalNodeTable;
+     static Hashset<G_CFLOBDDNode> *canonicalNodeTable;
      void Canonicalize();
      static void GarbageCollectCanonicalNodeTable();
 
@@ -141,7 +138,8 @@ class G_CFLOBDDNodeHandle {
 	 struct G_CFLOBDDNodeHandle_Hash {
 	 public:
 		 size_t operator()(const G_CFLOBDDNodeHandle& c) const {
-			 return ((reinterpret_cast<std::uintptr_t>(c.handleContents.get()) >> 2) % 997);
+			//  return ((reinterpret_cast<std::uintptr_t>(c.handleContents.get()) >> 2) % 997);
+      return ((reinterpret_cast<std::uintptr_t>(c.handleContents) >> 2) % 997);
 		 }
 	 };
 };

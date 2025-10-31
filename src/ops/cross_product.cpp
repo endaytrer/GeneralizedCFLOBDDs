@@ -20,8 +20,8 @@ using namespace G_CFL_OBDD;
 //***************************************************************
 
 // Initializations of static members ---------------------------------
-// Hashset<PairProductMapBody> *PairProductMapBody::canonicalPairProductMapBodySet = new Hashset<PairProductMapBody>(HASHSET_NUM_BUCKETS);
-std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> PairProductMapBody::canonicalPairProductMapBodySet;
+Hashset<PairProductMapBody> *PairProductMapBody::canonicalPairProductMapBodySet = new Hashset<PairProductMapBody>(HASHSET_NUM_BUCKETS);
+// std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> PairProductMapBody::canonicalPairProductMapBodySet;
 
 // Constructor
 PairProductMapBody::PairProductMapBody()
@@ -36,12 +36,12 @@ void PairProductMapBody::IncrRef()
 
 void PairProductMapBody::DecrRef()
 {
-//   if (--refCount == 0) {    // Warning: Saturation not checked
-//     if (isCanonical) {
-//       PairProductMapBody::canonicalPairProductMapBodySet.erase(this);
-//     }
-//     delete this;
-//   }
+  if (--refCount == 0) {    // Warning: Saturation not checked
+    if (isCanonical) {
+      PairProductMapBody::canonicalPairProductMapBodySet->DeleteEq(this);
+    }
+    delete this;
+  }
 }
 
 unsigned int PairProductMapBody::Hash(unsigned int modsize) const
@@ -116,15 +116,7 @@ PairProductMapHandle::PairProductMapHandle()
 // Destructor
 PairProductMapHandle::~PairProductMapHandle()
 {
-//   mapContents->DecrRef();
-    if (mapContents != NULL) {
-      auto it = PairProductMapBody::canonicalPairProductMapBodySet.find(mapContents);
-      if (it != PairProductMapBody::canonicalPairProductMapBodySet.end() && !it->lock()) {
-          // Found expired node -> remove it lazily
-          PairProductMapBody::canonicalPairProductMapBodySet.erase(it);
-          return;
-      }
-    }
+  mapContents->DecrRef();
 }
 
 // Copy constructor
@@ -137,11 +129,14 @@ PairProductMapHandle::PairProductMapHandle(const PairProductMapHandle &r)
 // Overloaded assignment
 PairProductMapHandle& PairProductMapHandle::operator= (const PairProductMapHandle &r)
 {
-    if (this != &r) // avoid self-assignment
-    {
-        mapContents = r.mapContents; // shared_ptr automatically manages reference count
-    }
-    return *this;
+  if (this != &r)      // don't assign to self!
+  {
+    PairProductMapBody *temp = mapContents;
+    mapContents = r.mapContents;
+    mapContents->IncrRef();
+    temp->DecrRef();
+  }
+  return *this;
 }
 
 // Overloaded !=
@@ -164,7 +159,7 @@ std::ostream& operator<< (std::ostream & out, const PairProductMapHandle &r)
 
 unsigned int PairProductMapHandle::Hash(unsigned int modsize) const
 {
-  return ((unsigned int) reinterpret_cast<uintptr_t>(mapContents.get()) >> 2) % modsize;
+  return ((unsigned int) reinterpret_cast<uintptr_t>(mapContents) >> 2) % modsize;
 }
 
 unsigned int PairProductMapHandle::Size()
@@ -203,21 +198,18 @@ int PairProductMapHandle::Lookup(intpair& p)
 
 void PairProductMapHandle::Canonicalize()
 {
-    auto it = PairProductMapBody::canonicalPairProductMapBodySet.find(mapContents);
-    if (it != PairProductMapBody::canonicalPairProductMapBodySet.end()) {
-        if (auto sp = it->lock()) {
-          // Found live node -> reuse it
-            mapContents = sp;
-            return;
-        } else {
-            // Found expired node -> remove it lazily
-            PairProductMapBody::canonicalPairProductMapBodySet.erase(it);
-        }
-    }
-
-    // Not found -> insert this node as canonical
-    PairProductMapBody::canonicalPairProductMapBodySet.insert(mapContents);
+  PairProductMapBody *answerContents;
+  unsigned int hash = PairProductMapBody::canonicalPairProductMapBodySet->GetHash(mapContents);
+  answerContents = PairProductMapBody::canonicalPairProductMapBodySet->Lookup(mapContents, hash);
+  if (answerContents == NULL) {
+    PairProductMapBody::canonicalPairProductMapBodySet->Insert(mapContents, hash);
     mapContents->isCanonical = true;
+  }
+  else {
+    answerContents->IncrRef();
+    mapContents->DecrRef();
+    mapContents = answerContents;
+  }
 }
 
 // Create map with reversed entries
@@ -336,12 +328,13 @@ bool PairProductMemo::operator==(const PairProductMemo& p)
 // node's exits
 // --------------------------------------------------------------------
 
-static std::unordered_map<PairProductKey, PairProductMemo, PairProductKey::PairProductKey_Hash, PairProductKey::PairProductKey_Equal> pairProductCache;
+static Hashtable<PairProductKey, PairProductMemo> *pairProductCache = NULL;
+// static std::unordered_map<PairProductKey, PairProductMemo, PairProductKey::PairProductKey_Hash, PairProductKey::PairProductKey_Equal> pairProductCache;
 
 namespace G_CFL_OBDD {
 
-G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
-                              std::shared_ptr<G_CFLOBDDInternalNode> n2,
+G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDInternalNode* n1,
+                              G_CFLOBDDInternalNode* n2,
                               PairProductMapHandle &pairProductMapHandle
                              )
 {
@@ -372,8 +365,8 @@ G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
       unsigned int j;
       unsigned int curExit;
       int b1, b2;
-      
-      auto n = std::make_shared<G_CFLOBDDInternalNode>(n1->level);
+
+      auto n = new G_CFLOBDDInternalNode(n1->level);
       n->numLayers = n1->numLayers;  // = n2->numLayers
       n->connections = new ConnectionList[n->numLayers];
 
@@ -396,49 +389,54 @@ G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
       for (unsigned int layer = 1; layer < n->numLayers; layer++) {
         // iterate over LayerMapHandle to get the pairs of BConnections
         PairProductMapHandle newLayerMapHandle;
+        std::unordered_map<intpair, int, intpair::intpair_hash, intpair::intpair_equal> tempMap;
         for (auto& it : LayerMapHandle.mapContents->mapArray) {
-            auto n1_connection = n1->connections[layer][it.First()];
-            auto n2_connection = n2->connections[layer][it.Second()];
+          auto n1_connection = n1->connections[layer][it.First()];
+          auto n2_connection = n2->connections[layer][it.Second()];
 
-            PairProductMapHandle tempMapHandle;
-            G_CFLOBDDNodeHandle n_handle = PairProduct(*(n1_connection.entryPointHandle),
-                                                       *(n2_connection.entryPointHandle),
-                                                       tempMapHandle);
-            // Fill in n->connections[layer].returnMapHandle
-            G_CFLOBDDReturnMapHandle n_returnHandle;
-            std::unordered_map<intpair, int, intpair::intpair_hash, intpair::intpair_equal> tempMap;
-            for (unsigned int k = 0; k < tempMapHandle.Size(); k++) {
-                auto first = tempMapHandle[k].First();
-                auto second = tempMapHandle[k].Second();
-                auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
-                auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
-                auto pair_index = intpair(adjusted_first, adjusted_second);
-                auto pi_it = tempMap.find(pair_index);
-                if (pi_it == tempMap.end()) {
-                  // Not found
-                  newLayerMapHandle.AddToEnd(pair_index);
-                  n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
-                  tempMap[pair_index] = newLayerMapHandle.Size() - 1;
-                }
-                else {
-                  // Found
-                  n_returnHandle.AddToEnd(pi_it->second);
-                }
-            }
-            n_returnHandle.Canonicalize();
-            auto new_connection = Connection(n_handle, n_returnHandle);
-            n->connections[layer].AddConnection(new_connection);
+          PairProductMapHandle tempMapHandle;
+          G_CFLOBDDNodeHandle n_handle = PairProduct(*(n1_connection.entryPointHandle),
+                                                      *(n2_connection.entryPointHandle),
+                                                      tempMapHandle);
+          // Fill in n->connections[layer].returnMapHandle
+          G_CFLOBDDReturnMapHandle n_returnHandle;
+          // n_returnHandle.mapContents->mapArray.assign(tempMapHandle.Size(), -1);
+          for (unsigned int k = 0; k < tempMapHandle.Size(); k++) {
+              auto first = tempMapHandle[k].First();
+              auto second = tempMapHandle[k].Second();
+              auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
+              auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
+              auto pair_index = intpair(adjusted_first, adjusted_second);
+              auto pi_it = tempMap.find(pair_index);
+              if (pi_it == tempMap.end()) {
+                // Not found
+                newLayerMapHandle.AddToEnd(pair_index);
+                n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
+                // n_returnHandle[k] = newLayerMapHandle.Size() - 1;
+                tempMap[pair_index] = newLayerMapHandle.Size() - 1;
+              }
+              else {
+                // Found
+                n_returnHandle.AddToEnd(pi_it->second);
+                // n_returnHandle[k] = pi_it->second;
+              }
           }
-          n->connections[layer].Canonicalize();
+          n_returnHandle.Canonicalize();
+          auto new_connection = Connection(n_handle, n_returnHandle);
+          n->connections[layer].AddConnection(new_connection);
+        }
+        n->connections[layer].Canonicalize();
+        newLayerMapHandle.Canonicalize();
         LayerMapHandle = newLayerMapHandle;
       }
       n->numExits = LayerMapHandle.Size();
       n->grammar = n1->grammar; // = n2->grammar
+      LayerMapHandle.Canonicalize();
       pairProductMapHandle = LayerMapHandle;
+      // pairProductMapHandle.Canonicalize();
 #ifdef PATH_COUNTING_ENABLED
          n->InstallPathCounts();
 #endif
-      LayerMapHandle.Canonicalize();
       return G_CFLOBDDNodeHandle(n);
     }
   }
@@ -454,24 +452,24 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
   auto key1 = PairProductKey(n1, n2);
   auto key2 = PairProductKey(n2, n1);
 
-  bool isCached = pairProductCache.find(key1) != pairProductCache.end();
+  // bool isCached = pairProductCache.find(key1) != pairProductCache.end();
+  bool isCached = pairProductCache->Fetch(key1, cachedPairProductMemo);
 
   if (isCached) {
-    auto memo = pairProductCache.at(key1);
+    auto memo = cachedPairProductMemo;
     pairProductMapHandle = memo.pairProductMapHandle;
     return memo.nodeHandle;
   }
-  else if (pairProductCache.find(key2) != pairProductCache.end()) {
-    auto memo = pairProductCache.at(key2);
-    pairProductMapHandle = memo.pairProductMapHandle.Flip();
-    return memo.nodeHandle;
-}
+  else if (pairProductCache->Fetch(key2, cachedPairProductMemo)) {
+    pairProductMapHandle = cachedPairProductMemo.pairProductMapHandle.Flip();
+    return cachedPairProductMemo.nodeHandle;
+  }
   else {
     G_CFLOBDDNodeHandle answer;
 
     if (n1.handleContents->NodeKind() == G_CFLOBDD_INTERNAL) {
-      answer = PairProduct(std::dynamic_pointer_cast<G_CFLOBDDInternalNode>(n1.handleContents),
-                           std::dynamic_pointer_cast<G_CFLOBDDInternalNode>(n2.handleContents),
+      answer = PairProduct(static_cast<G_CFLOBDDInternalNode*>(n1.handleContents),
+                           static_cast<G_CFLOBDDInternalNode*>(n2.handleContents),
                            pairProductMapHandle
                           );
     }
@@ -513,7 +511,7 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
     // answer.print(std::cout);
     // std::cout << "\n";
     auto memo = PairProductMemo(answer, pairProductMapHandle);
-    pairProductCache.insert(std::make_pair(key1, memo));
+    pairProductCache->Insert(key1, memo);
     return answer;
   }
 }
@@ -521,10 +519,13 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
 
 void InitPairProductCache()
 {
+  pairProductCache = new Hashtable<PairProductKey, PairProductMemo>(HASHSET_NUM_BUCKETS);
 }
 
 void DisposeOfPairProductCache()
 {
-  pairProductCache.clear();
+  // pairProductCache.clear();
+  delete pairProductCache;
+  pairProductCache = NULL;
 }
 } // namespace G_CFL_OBDD

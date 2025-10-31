@@ -536,7 +536,6 @@ void HardwareBenchmarks::c6288_8() {
     G_CFLOBDD	gate0_6_5	=  MkNor(gate0_6_3, gate0_6_4);
     G_CFLOBDD	gate0_6_6	=  MkNor(pp0_6, gate0_6_4);
     G_CFLOBDD	sum6	=  MkNor(gate0_6_5, gate0_6_6);
-    sum6.print(std::cout);
     G_CFLOBDD	c0_6	= MkNor(gate0_6_0,gate0_6_4); 
     G_CFLOBDD	gate1_6_0	=  MkNor(s2_5, c1_5);
     G_CFLOBDD	gate1_6_1	=  MkNor(s2_5, gate1_6_0);
@@ -756,11 +755,11 @@ void HardwareBenchmarks::c6288_8() {
     std::vector<unsigned int> edgeCount (16, 0);
     std::vector<G_CFLOBDD> sums = {sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7,
                                    sum8, sum9, sum10, sum11, sum12, sum13, sum14, sum15};
-    // std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
-    // Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
-    // for (unsigned int i = 0; i < 16; i++) {
-    //     sums[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    // }
+    std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
+    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    for (unsigned int i = 0; i < 16; i++) {
+        sums[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    }
 
     unsigned int totalNodes = 0;
     unsigned int totalEdges = 0;

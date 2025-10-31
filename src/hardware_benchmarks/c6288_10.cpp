@@ -13,29 +13,37 @@ using namespace std::chrono;
 void HardwareBenchmarks::c6288_10() {
 
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    // std::vector<std::string> productions = {
+    //     "S 19 -> S 0 S 18", // 20
+    //     "S 18 -> S 0 S 17", // 19
+    //     "S 17 -> S 0 S 16", // 18
+    //     "S 16 -> S 0 S 15", // 17
+    //     "S 15 -> S 0 S 14", // 16
+    //     "S 14 -> S 0 S 13", // 15
+    //     "S 13 -> S 0 S 12", // 14
+    //     "S 12 -> S 0 S 11", // 13
+    //     "S 11 -> S 0 S 10", // 12
+    //     "S 10 -> S 0 S 9", // 11
+    //     "S 9 -> S 0 S 8", // 10
+    //     "S 8 -> S 0 S 7", // 9
+    //     "S 7 -> S 0 S 6", // 8
+    //     "S 6 -> S 0 S 5", // 7
+    //     "S 5 -> S 0 S 4", // 6
+    //     "S 4 -> S 0 S 3", // 5
+    //     "S 3 -> S 0 S 2", // 4
+    //     "S 2 -> S 0 S 1", // 3
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a" // 1
+    // };
     std::vector<std::string> productions = {
-        "S 19 -> S 0 S 18", // 20
-        "S 18 -> S 0 S 17", // 19
-        "S 17 -> S 0 S 16", // 18
-        "S 16 -> S 0 S 15", // 17
-        "S 15 -> S 0 S 14", // 16
-        "S 14 -> S 0 S 13", // 15
-        "S 13 -> S 0 S 12", // 14
-        "S 12 -> S 0 S 11", // 13
-        "S 11 -> S 0 S 10", // 12
-        "S 10 -> S 0 S 9", // 11
-        "S 9 -> S 0 S 8", // 10
-        "S 8 -> S 0 S 7", // 9
-        "S 7 -> S 0 S 6", // 8
-        "S 6 -> S 0 S 5", // 7
-        "S 5 -> S 0 S 4", // 6
-        "S 4 -> S 0 S 3", // 5
-        "S 3 -> S 0 S 2", // 4
-        "S 2 -> S 0 S 1", // 3
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1" , // 4
         "S 1 -> S 0 S 0", // 2
-        "S 0 -> a" // 1
+        "S 0 -> a", // 1
     };
-    grammar->constructGrammar(productions, "S 19");
+    grammar->constructGrammar(productions, "S 5");
     grammar->InstallNumVars();
     grammar->updateLevel();
 

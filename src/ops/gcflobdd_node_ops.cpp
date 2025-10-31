@@ -43,7 +43,7 @@ G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarN
     node->numExits = 1;
     node->grammar = grammar;
 
-    auto handle = G_CFLOBDDNodeHandle(std::shared_ptr<G_CFLOBDDNode>(node));
+    auto handle = G_CFLOBDDNodeHandle(node);
     G_CFLOBDDNodeHandle::NoDistinctionNode[key] = handle;
     return handle;
 }

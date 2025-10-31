@@ -41,6 +41,20 @@ namespace G_CFL_OBDD {
 
 	public:
 		std::ostream& print(std::ostream & out = std::cout) const;
+
+		struct ConnectionHash {
+		public:
+			size_t operator()(const ConnectionT<Handle>& c) const {
+				return c.Hash(997);;
+			}
+		};
+
+		struct ConnectionEqual {
+		public:
+			bool operator()(const ConnectionT<Handle>& a, const ConnectionT<Handle>& b) const {
+				return (a == b);
+			}
+		};
 	};
 
 

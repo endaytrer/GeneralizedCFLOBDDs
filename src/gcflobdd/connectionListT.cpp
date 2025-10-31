@@ -161,8 +161,8 @@ bool ConnectionListTHandle<T>::operator!=(const ConnectionListTHandle<T> &r) con
 template <typename T>
 bool ConnectionListTHandle<T>::operator==(const ConnectionListTHandle<T> &r) const
 {
-
   return (connectionList == r.connectionList);
+  // return (*connectionList == *r.connectionList);
 }
 
 // Overloaded []
@@ -192,6 +192,7 @@ unsigned int ConnectionListTHandle<T>::Hash(unsigned int modsize) const
 {
 	assert(connectionList->isCanonical);
 	return ((unsigned int) reinterpret_cast<uintptr_t>(connectionList) >> 2) % modsize;
+  // return connectionList->Hash(modsize);
 }
 
 template <typename T>

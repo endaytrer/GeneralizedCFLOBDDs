@@ -1448,4 +1448,19 @@ void HardwareBenchmarks::c6288_12() {
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start); 
+
+    std::cout << "Time taken by CFLOBDD C6288 12-bit multiplier: "
+         << duration.count() << " milliseconds" << std::endl;
+    
+    std::vector<G_CFLOBDD> result = {sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8, sum9, sum10, sum11, sum12, sum13, sum14, sum15, sum16, sum17, sum18, sum19, sum20, sum21, sum22, sum23};
+
+    unsigned int total_nodes = 0;
+    unsigned int total_edges = 0;
+    for(unsigned int i = 0; i < result.size(); i++) {
+        result[i].CountNodesAndEdges(total_nodes, total_edges);
+    }
+
+    std::cout << "Total number of nodes in the CFLOBDD representation of the product: " << total_nodes << std::endl;
+    std::cout << "Total number of edges in the CFLOBDD representation of the product: " << total_edges << std::endl;
+    std::cout << "Total memory : " << (total_nodes + total_edges) << std::endl;
 }

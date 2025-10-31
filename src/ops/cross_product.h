@@ -36,7 +36,7 @@ class PairProductMapHandle {
   int Lookup(intpair& p);
   void Canonicalize();
   PairProductMapHandle Flip();                          // Create map with reversed entries
-  std::shared_ptr<PairProductMapBody> mapContents;
+  PairProductMapBody* mapContents;
 };
 
 //***************************************************************
@@ -62,20 +62,21 @@ class PairProductMapBody {//: public List<intpair> {
   unsigned int hashCheck;
  public:
   bool isCanonical;              // Is this PairProductMapBody in *canonicalPairProductMapBodySet?
-    struct PPHash {
-        size_t operator()(const std::weak_ptr<PairProductMapBody>& p) const {
-            return p.lock()->Hash(997);
-        }
-    };
-    struct PPEqual {
-        bool operator()(const std::weak_ptr<PairProductMapBody>& a, const std::weak_ptr<PairProductMapBody>& b) const {
-            auto sp_a = a.lock();
-            auto sp_b = b.lock();
-            if (!sp_a || !sp_b) return false; // treat expired as unequal
-            return *sp_a == *sp_b;
-        }
-    };
-  static std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> canonicalPairProductMapBodySet;
+    // struct PPHash {
+    //     size_t operator()(const std::weak_ptr<PairProductMapBody>& p) const {
+    //         return p.lock()->Hash(997);
+    //     }
+    // };
+    // struct PPEqual {
+    //     bool operator()(const std::weak_ptr<PairProductMapBody>& a, const std::weak_ptr<PairProductMapBody>& b) const {
+    //         auto sp_a = a.lock();
+    //         auto sp_b = b.lock();
+    //         if (!sp_a || !sp_b) return false; // treat expired as unequal
+    //         return *sp_a == *sp_b;
+    //     }
+    // };
+  // static std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> canonicalPairProductMapBodySet;
+  static Hashset<PairProductMapBody> *canonicalPairProductMapBodySet;
 
 };
 

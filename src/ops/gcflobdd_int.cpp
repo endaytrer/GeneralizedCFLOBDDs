@@ -85,6 +85,7 @@ G_CFLOBDD MkNand(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
     assert(f.root->grammar == g.root->grammar);
+    // return MkNot(MkAnd(f.root, g.root));
     return G_CFLOBDD(MkNand(f.root, g.root));
 }
 
@@ -101,6 +102,7 @@ G_CFLOBDD MkNor(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
     assert(f.root->grammar == g.root->grammar);
+    // return MkNot(MkOr(f.root, g.root));
     return G_CFLOBDD(MkNor(f.root, g.root));
 }
 

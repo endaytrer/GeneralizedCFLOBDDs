@@ -32,16 +32,16 @@ using namespace G_CFL_OBDD;
 
 // Initializations of static members ---------------------------------
 
-size_t G_CFLOBDDNodeHash::operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const {
-  return c ? c->Hash(997) : 0;  // expired nodes hash to 0
-}
+// size_t G_CFLOBDDNodeHash::operator()(const std::shared_ptr<G_CFLOBDDNode>& c) const {
+//   return c ? c->Hash(997) : 0;  // expired nodes hash to 0
+// }
 
-bool G_CFLOBDDNodeEqual::operator()(const std::shared_ptr<G_CFLOBDDNode>& a,
-                                    const std::shared_ptr<G_CFLOBDDNode>& b) const {
+// bool G_CFLOBDDNodeEqual::operator()(const std::shared_ptr<G_CFLOBDDNode>& a,
+//                                     const std::shared_ptr<G_CFLOBDDNode>& b) const {
 
-    if (!a || !b) return false; // treat expired as unequal
-      return *a == *b;
-}
+//     if (!a || !b) return false; // treat expired as unequal
+//       return *a == *b;
+// }
 
 
 // --------------------------------------------------------------------
@@ -73,18 +73,18 @@ bool NoDistinctionCacheKey::operator== (const NoDistinctionCacheKey& p) const {
 }
 
 
-// Hashset<G_CFLOBDDNode> *G_CFLOBDDNodeHandle::canonicalNodeTable = new Hashset<G_CFLOBDDNode>(HASHSET_NUM_BUCKETS);
-std::unordered_set<std::shared_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> G_CFLOBDDNodeHandle::canonicalNodeTable;
+Hashset<G_CFLOBDDNode> *G_CFLOBDDNodeHandle::canonicalNodeTable = new Hashset<G_CFLOBDDNode>(HASHSET_NUM_BUCKETS);
+// std::unordered_set<std::shared_ptr<G_CFLOBDDNode>, G_CFLOBDDNodeHash, G_CFLOBDDNodeEqual> G_CFLOBDDNodeHandle::canonicalNodeTable;
 G_CFLOBDDNodeHandle G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
 G_CFLOBDDNodeHandle G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
 std::unordered_map<NoDistinctionCacheKey, G_CFLOBDDNodeHandle, NoDistinctionCacheKey::NoDistinctionCacheKey_Hash, NoDistinctionCacheKey::NoDistinctionCacheKey_Equal> G_CFLOBDDNodeHandle::NoDistinctionNode;
 
 void G_CFLOBDDNodeHandle::InitLeafNodes() {
     if (G_CFLOBDDForkNodeHandle.handleContents == NULL) {
-        G_CFLOBDDForkNodeHandle.handleContents = std::make_shared<G_CFLOBDDForkNode>();
+        G_CFLOBDDForkNodeHandle.handleContents = new G_CFLOBDDForkNode();
     }
     if (G_CFLOBDDDontCareNodeHandle.handleContents == NULL) {
-        G_CFLOBDDDontCareNodeHandle.handleContents = std::make_shared<G_CFLOBDDDontCareNode>();
+        G_CFLOBDDDontCareNodeHandle.handleContents = new G_CFLOBDDDontCareNode();
     }
     NoDistinctionCacheKey key0(1, G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle.handleContents->grammar);
     NoDistinctionNode[key0] = G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
@@ -103,7 +103,7 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle()
 // Construct and canonicalize
 //
 G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(G_CFLOBDDNode *n)
-  : handleContents(std::shared_ptr<G_CFLOBDDNode>(n))
+  : handleContents(n)
 {
   assert(n != NULL);
   handleContents->IncrRef();
@@ -120,44 +120,38 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const G_CFLOBDDNodeHandle &c)
   }
 }
 
-// Constructor from shared_ptr
-G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const std::shared_ptr<G_CFLOBDDNode>& n)
-  : handleContents(n)
-{
-  assert(n != NULL);
-  handleContents->IncrRef();
-  Canonicalize();
-}
+// // Constructor from shared_ptr
+// G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const std::shared_ptr<G_CFLOBDDNode>& n)
+//   : handleContents(n)
+// {
+//   assert(n != NULL);
+//   handleContents->IncrRef();
+//   Canonicalize();
+// }
 
 G_CFLOBDDNodeHandle::~G_CFLOBDDNodeHandle()
 {
   if (handleContents != NULL) {
     handleContents->DecrRef();
-    // if (handleContents->GetRefCount() == 0) {
-    //     // Found expired node -> remove it lazily
-    //     auto it = canonicalNodeTable.find(handleContents);
-    //     canonicalNodeTable.erase(it);
-    //     return;
-    // }
   }
 }
 
 void G_CFLOBDDNodeHandle::GarbageCollectCanonicalNodeTable()
 {
-    for (auto it = canonicalNodeTable.begin(); it != canonicalNodeTable.end(); ) {
-        if (it->use_count() == 1) { // only held by the canonical table
-            it = canonicalNodeTable.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    // for (auto it = canonicalNodeTable.begin(); it != canonicalNodeTable.end(); ) {
+    //     if (it->use_count() == 1) { // only held by the canonical table
+    //         it = canonicalNodeTable.erase(it);
+    //     } else {
+    //         ++it;
+    //     }
+    // }
 }
 
 // Hash
 unsigned int G_CFLOBDDNodeHandle::Hash(unsigned int modsize) const
 {
-//   return ((unsigned int) reinterpret_cast<uintptr_t>(handleContents) >> 2) % modsize;
-  return ((unsigned int) reinterpret_cast<uintptr_t>(handleContents.get()) >> 2) % modsize;
+  return ((unsigned int) reinterpret_cast<uintptr_t>(handleContents) >> 2) % modsize;
+  // return ((unsigned int) reinterpret_cast<uintptr_t>(handleContents.get()) >> 2) % modsize;
 }
 
 // Overloaded !=
@@ -175,23 +169,23 @@ bool G_CFLOBDDNodeHandle::operator== (const G_CFLOBDDNodeHandle & C) const
 // Overloaded assignment
 G_CFLOBDDNodeHandle & G_CFLOBDDNodeHandle::operator= (const G_CFLOBDDNodeHandle &c)
 {
-//   if (this != &c)      // don't assign to self!
-//   {
-//     G_CFLOBDDNode *temp = handleContents;
-//     handleContents = c.handleContents;
-//     if (handleContents != NULL) {
-//       handleContents->IncrRef();
-//     }
-//     if (temp != NULL) {
-//       temp->DecrRef();
-//     }
-//   }
-//   return *this;        
-    if (this != &c)      // don't assign to self!
-    {
-        handleContents = c.handleContents;
+  if (this != &c)      // don't assign to self!
+  {
+    G_CFLOBDDNode *temp = handleContents;
+    handleContents = c.handleContents;
+    if (handleContents != NULL) {
+      handleContents->IncrRef();
     }
-    return *this;
+    if (temp != NULL) {
+      temp->DecrRef();
+    }
+  }
+  return *this;        
+    // if (this != &c)      // don't assign to self!
+    // {
+    //     handleContents = c.handleContents;
+    // }
+    // return *this;
 }
 
 //********************************************************************
@@ -288,33 +282,22 @@ void G_CFLOBDDNodeHandle::DisposeOfReduceCache()
 // Canonicalization --------------------------------------------
 void G_CFLOBDDNodeHandle::Canonicalize()
 {
-  handleContents->SetHashCache(997, handleContents->Hash(997));
-  auto it = canonicalNodeTable.find(handleContents);
-  if (it != canonicalNodeTable.end()) {
-    handleContents->DecrRef();
-    (*it)->IncrRef();
-    handleContents = *it;
-    return;
+  // handleContents->SetHashCache(997, handleContents->Hash(997));
+  G_CFLOBDDNode *answerContents;
+
+  if (!handleContents->IsCanonical()) {
+	  unsigned int hash = canonicalNodeTable->GetHash(handleContents);
+    answerContents = canonicalNodeTable->Lookup(handleContents, hash);
+    if (answerContents == NULL) {
+      canonicalNodeTable->Insert(handleContents, hash);
+      handleContents->SetCanonical();
+    }
+    else {
+      answerContents->IncrRef();
+      handleContents->DecrRef();
+      handleContents = answerContents;
+    }
   }
-
-  // Not found -> insert this node as canonical
-  canonicalNodeTable.insert(handleContents);
-  handleContents->SetCanonical();
-  // G_CFLOBDDNode *answerContents;
-
-  // if (!handleContents->IsCanonical()) {
-	// unsigned int hash = canonicalNodeTable->GetHash(handleContents);
-  //   answerContents = canonicalNodeTable->Lookup(handleContents, hash);
-  //   if (answerContents == NULL) {
-  //     canonicalNodeTable->Insert(handleContents, hash);
-  //     handleContents->SetCanonical();
-  //   }
-  //   else {
-  //     answerContents->IncrRef();
-  //     handleContents->DecrRef();
-  //     handleContents = answerContents;
-  //   }
-  // }
 }
 
 // print
@@ -399,7 +382,7 @@ G_CFLOBDDReturnMapHandle ComposeAndReduce(G_CFLOBDDReturnMapHandle& mapHandle, R
 {
 	int c2, c3;
 	int size = mapHandle.mapContents->mapArray.size();
-	G_CFLOBDDReturnMapHandle answer;// (size);
+	G_CFLOBDDReturnMapHandle answer (size);
 	if (redMapHandle.mapContents->isIdentityMap){
 		inducedRedMapHandle = redMapHandle;
 		return mapHandle;
@@ -413,9 +396,11 @@ G_CFLOBDDReturnMapHandle ComposeAndReduce(G_CFLOBDDReturnMapHandle& mapHandle, R
 			answer.AddToEnd(c3); 	  // Why not answer.AddToEnd(c3);
 			reductionMap.emplace(c3, answer.Size() - 1);
 			inducedRedMapHandle.AddToEnd(answer.Size() - 1);
+      // inducedRedMapHandle.mapContents->mapArray[i] = answer.Size() - 1;
 		}
 		else{
 			inducedRedMapHandle.AddToEnd(reductionMap[c3]);
+      // inducedRedMapHandle.mapContents->mapArray[i] = reductionMap[c3];
 		}
 	}
 	inducedRedMapHandle.Canonicalize();
@@ -425,7 +410,7 @@ G_CFLOBDDReturnMapHandle ComposeAndReduce(G_CFLOBDDReturnMapHandle& mapHandle, R
 
 G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce)
 {
-  auto n = std::make_shared<G_CFLOBDDInternalNode>(level);
+  G_CFLOBDDInternalNode* n = new G_CFLOBDDInternalNode(level);
   n->numLayers = numLayers;
   n->connections = new ConnectionList[n->numLayers];
   auto currentRedMapHandle = redMapHandle;
@@ -433,20 +418,25 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
       ConnectionList& currentConnections = connections[layer];
       ReductionMapHandle nextRedMapHandle;
       unsigned int currPosition = 0;
+      std::unordered_map<Connection, unsigned int, Connection::ConnectionHash, Connection::ConnectionEqual> connMap;
       for (unsigned int i = 0; i < currentConnections.Size(); i++) {
           auto conn = currentConnections[i];
           ReductionMapHandle inducedRedMapHandle;
           G_CFLOBDDReturnMapHandle inducedReturnMap = ComposeAndReduce(conn.returnMapHandle, currentRedMapHandle, inducedRedMapHandle);
           G_CFLOBDDNodeHandle reducedNodeHandle = conn.entryPointHandle->Reduce(inducedRedMapHandle, inducedReturnMap.Size(), forceReduce);
           Connection newConn(reducedNodeHandle, inducedReturnMap);
-          auto currPositionInNextMap = n->connections[layer].LookupInv(newConn);
-          if (currPositionInNextMap != -1) {
-              nextRedMapHandle.AddToEnd(currPositionInNextMap);
+          auto it = connMap.find(newConn);
+          // auto currPositionInNextMap = n->connections[layer].LookupInv(newConn);
+          // if (currPositionInNextMap != -1) {
+          if (it != connMap.end()) {
+              // nextRedMapHandle.AddToEnd(currPositionInNextMap);
+              nextRedMapHandle.AddToEnd(it->second);
           }
           else {
             n->connections[layer].AddConnection(newConn);
             nextRedMapHandle.AddToEnd(currPosition);
             currPosition++;
+            connMap.insert(std::make_pair(newConn, currPosition - 1));
           } 
       }
       currentRedMapHandle = nextRedMapHandle;
@@ -505,13 +495,12 @@ void G_CFLOBDDInternalNode::IncrRef()
 
 void G_CFLOBDDInternalNode::DecrRef()
 {
-  // if (--refCount == 0) {    // Warning: Saturation not checked
-  //   if (isCanonical) {
-  //     G_CFLOBDDNodeHandle::canonicalNodeTable->DeleteEq(this);
-  //   }
-  //   delete this;
-  // }
-  --refCount;
+  if (--refCount == 0) {    // Warning: Saturation not checked
+    if (isCanonical) {
+      G_CFLOBDDNodeHandle::canonicalNodeTable->DeleteEq(this);
+    }
+    delete this;
+  }
 }
 
 // print
