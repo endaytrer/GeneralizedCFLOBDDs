@@ -41,8 +41,10 @@ class G_CFLOBDDTopNodeT {
   G_CFLOBDDTopNodeT& operator= (const G_CFLOBDDTopNodeT<T> &n); // Overloaded = (hidden)
  public:
   std::ostream& print(std::ostream & out = std::cout) const;
-  void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
+  void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+
+  void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
   void PrintYield(std::ostream & out = std::cout) const;
 
   // Usage: G_CFLOBDDTopNodeT<T>::G_CFLOBDDTopNodeTRefPtr

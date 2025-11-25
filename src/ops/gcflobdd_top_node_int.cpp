@@ -67,7 +67,7 @@ G_CFLOBDDTopNodeIntRefPtr MkDistinction(unsigned int i, int level, const std::sh
 
   // assert(i < (1 << G_CFLOBDDTopNode::maxLevel));   // i.e., i < 2**maxLevel
   if (level == -1)
-	tempHandle = MkDistinction(G_CFLOBDDTopNode::maxLevel, i, grammar->root);
+	  tempHandle = MkDistinction(G_CFLOBDDTopNode::maxLevel, i, grammar->root);
   else
 	  tempHandle = MkDistinction(level, i, grammar->root);
   m.AddToEnd(0);

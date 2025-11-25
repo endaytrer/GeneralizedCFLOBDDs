@@ -24,7 +24,8 @@ template<>
 G_CFLOBDD_T<int>::G_CFLOBDD_T()
 {
     auto grammar = std::make_shared<Grammar>();
-    root = MkTrueTop(-1, grammar);
+    // root = MkTrueTop(-1, grammar);
+    root = NULL; // To be set later
 }
 
 

@@ -3,6 +3,6 @@
 
 namespace G_CFL_OBDD {
 
-    template class  ConnectionListTHandle<ReturnMapHandle<int>>;
+    template class ConnectionListT<ReturnMapHandle<int>>;
 
 }

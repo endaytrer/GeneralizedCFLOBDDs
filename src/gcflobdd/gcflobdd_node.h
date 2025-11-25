@@ -32,7 +32,7 @@ namespace G_CFL_OBDD {
 #include "connectionT.h"
 #include "connectionListT.h"
 namespace G_CFL_OBDD {
-    typedef ConnectionListTHandle<G_CFLOBDDReturnMapHandle> ConnectionList;
+  typedef ConnectionListT<G_CFLOBDDReturnMapHandle> ConnectionList;
 	typedef ConnectionT<G_CFLOBDDReturnMapHandle> Connection;
 }
 #include "reduction_map.h"
@@ -217,8 +217,9 @@ class G_CFLOBDDNode {
   unsigned int GetRefCount(){ return refCount; }
  public:
   virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
-  virtual void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
+  virtual void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount) = 0;
+  virtual void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes) = 0;
   virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
   const unsigned int level;
   std::shared_ptr<GrammarNode> grammar;
@@ -256,8 +257,9 @@ class G_CFLOBDDInternalNode : public G_CFLOBDDNode {
 
  public:
   std::ostream& print(std::ostream & out = std::cout) const;
-  void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges, 
+  void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+  void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
   void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
 
   unsigned int numLayers;
@@ -289,8 +291,9 @@ class G_CFLOBDDLeafNode : public G_CFLOBDDNode {
 
  public:
 	virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
-  void CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges, 
+  void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
+  void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
   virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
 };
 

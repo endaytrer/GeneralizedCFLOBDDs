@@ -122,11 +122,17 @@ namespace G_CFL_OBDD{
     }
 
     template <typename T>
-    void G_CFLOBDDTopNodeT<T>::CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
+    void G_CFLOBDDTopNodeT<T>::CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
         unsigned int& nodeCount, unsigned int& edgeCount)
     {
         rootConnection.entryPointHandle->handleContents->CountNodesAndEdges(visitedNodes, visitedEdges, nodeCount, edgeCount);
         edgeCount += rootConnection.returnMapHandle.Size();
+    }
+
+    template <typename T>
+    void G_CFLOBDDTopNodeT<T>::CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes)
+    {
+        rootConnection.entryPointHandle->handleContents->CountPaths(visitedNodes);
     }
 
     template <typename T>
@@ -160,7 +166,7 @@ namespace G_CFL_OBDD{
         // (component-wise) to each pair.
         ReturnMapHandle<T> returnMapHandle;
         std::unordered_map<T, unsigned int> reduction_map;
-        ReductionMapHandle reductionMapHandle;
+        ReductionMapHandle reductionMapHandle (MapHandle.Size());
         unsigned int iterator = 0;
         while (iterator < MapHandle.Size()){
             T c1, c2;

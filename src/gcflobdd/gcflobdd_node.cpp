@@ -114,7 +114,6 @@ G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(G_CFLOBDDNode *n)
 G_CFLOBDDNodeHandle::G_CFLOBDDNodeHandle(const G_CFLOBDDNodeHandle &c)
 {
   handleContents = c.handleContents;
-  // std::cout << "handleContents use_count: " << handleContents.use_count() << std::endl;
   if (handleContents != NULL) {
     handleContents->IncrRef();
   }
@@ -416,9 +415,10 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
   auto currentRedMapHandle = redMapHandle;
   for (int layer = numLayers - 1; layer >= 0; layer--) {
       ConnectionList& currentConnections = connections[layer];
-      ReductionMapHandle nextRedMapHandle;
+      ReductionMapHandle nextRedMapHandle (currentConnections.Size());
       unsigned int currPosition = 0;
       std::unordered_map<Connection, unsigned int, Connection::ConnectionHash, Connection::ConnectionEqual> connMap;
+      ConnectionList tempConnections(currentConnections.Size());
       for (unsigned int i = 0; i < currentConnections.Size(); i++) {
           auto conn = currentConnections[i];
           ReductionMapHandle inducedRedMapHandle;
@@ -433,14 +433,20 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
               nextRedMapHandle.AddToEnd(it->second);
           }
           else {
-            n->connections[layer].AddConnection(newConn);
+            // n->connections[layer].AddConnection(newConn);
+            tempConnections.AddConnection(newConn);
             nextRedMapHandle.AddToEnd(currPosition);
             currPosition++;
             connMap.insert(std::make_pair(newConn, currPosition - 1));
           } 
       }
+      n->connections[layer].Reserve(tempConnections.Size());
+      for (int i = 0; i < tempConnections.Size(); i++) {
+          n->connections[layer].AddConnection(tempConnections[i]);
+      }
+      // No need to delete tempConnections as it's not dynamically allocated
       currentRedMapHandle = nextRedMapHandle;
-      n->connections[layer].Canonicalize();
+      // n->connections[layer].Canonicalize();
   }
   // Other material that has to be filled in
   n->numExits = replacementNumExits;
@@ -453,9 +459,9 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
 
 unsigned int G_CFLOBDDInternalNode::Hash(unsigned int modsize) const
 {
-  if (modsize == 997 && hash_set_997) {
-    return cachedHash_997;
-  }
+  // if (modsize == 997 && hash_set_997) {
+  //   return cachedHash_997;
+  // }
   unsigned int hvalue = 0;
   for (unsigned int j = 0; j < numLayers; j++) {
     hvalue = (997 * hvalue + connections[j].Hash(modsize)) % modsize;
@@ -523,11 +529,11 @@ std::ostream& G_CFLOBDDInternalNode::print(std::ostream & out) const
     return out;
 }
 
-void G_CFLOBDDInternalNode::CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
+void G_CFLOBDDInternalNode::CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	unsigned int& nodeCount, unsigned int& edgeCount)
 {
-  if (visitedNodes.find(this) == visitedNodes.end()) {
-    visitedNodes.insert(this);
+  if (visitedNodes->Lookup(new G_CFLOBDDNodeHandle(this)) == NULL) {
+    visitedNodes->Insert(new G_CFLOBDDNodeHandle(this));
     nodeCount++;
     for (unsigned int layer = 0; layer < numLayers; layer++) {
       for (unsigned int i = 0; i < connections[layer].Size(); i++)
@@ -542,6 +548,55 @@ void G_CFLOBDDInternalNode::CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*
       edgeCount += connections[layer].Size(); // for the connections from this node to the layer
     }
   }
+}
+
+void G_CFLOBDDInternalNode::InstallPathCounts() {
+  numPathsToExit = new long double[numExits];
+  isNumPathsMemAllocated = true;
+  for (unsigned int i = 0; i < numExits; i++) {
+    numPathsToExit[i] = 0;
+  }
+
+  std::vector<long double> tempPathsToExitLayerI (1, 1);
+  std::vector<long double> tempPathsToExitLayerIPlus1;
+
+  for (int layer = 0; layer < (int) numLayers; layer++) {
+    ConnectionList& currentConnections = connections[layer];
+    tempPathsToExitLayerIPlus1.clear();
+    if (layer + 1 < (int) numLayers)
+      tempPathsToExitLayerIPlus1.resize(connections[layer + 1].Size(), 0);
+    else
+      tempPathsToExitLayerIPlus1.resize(numExits, 0);
+    for (unsigned int i = 0; i < currentConnections.Size(); i++) {
+      Connection& conn = currentConnections[i];
+      G_CFLOBDDNode* childNode = conn.entryPointHandle->handleContents;
+      for (unsigned int j = 0; j < conn.returnMapHandle.Size(); j++) {
+        unsigned int exitIndexInChild = conn.returnMapHandle.mapContents->mapArray[j];
+        tempPathsToExitLayerIPlus1[exitIndexInChild] += tempPathsToExitLayerI[i] * childNode->numPathsToExit[j];
+      }
+    }
+    tempPathsToExitLayerI = tempPathsToExitLayerIPlus1;
+  }
+
+  for (unsigned int i = 0; i < tempPathsToExitLayerI.size(); i++) {
+    numPathsToExit[i] = tempPathsToExitLayerI[i];
+  }
+}
+
+void G_CFLOBDDInternalNode::CountPaths(Hashset<G_CFLOBDDNodeHandle> *visitedNodes)
+{
+	G_CFLOBDDNodeHandle* handle = new G_CFLOBDDNodeHandle(this);
+	if (visitedNodes->Lookup(handle) == NULL) {
+		visitedNodes->Insert(handle);
+    for (unsigned int layer = 0; layer < numLayers; layer++) {
+      for (unsigned int i = 0; i < connections[layer].Size(); i++)
+      {
+          Connection conn = connections[layer][i];
+          conn.entryPointHandle->handleContents->CountPaths(visitedNodes);
+      }
+    }
+		InstallPathCounts();
+	}
 }
 
 void G_CFLOBDDInternalNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
@@ -580,13 +635,21 @@ G_CFLOBDDLeafNode::~G_CFLOBDDLeafNode()
 void G_CFLOBDDLeafNode::IncrRef() { }
 void G_CFLOBDDLeafNode::DecrRef() { }
 
-void G_CFLOBDDLeafNode::CountNodesAndEdges(std::unordered_set<G_CFLOBDDNode*>& visitedNodes, Hashset<G_CFLOBDDReturnMapBody> *, unsigned int& nodeCount,
+void G_CFLOBDDLeafNode::CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody> *, unsigned int& nodeCount,
 	unsigned int& edgeCount)
 {
-  if (visitedNodes.find(this) == visitedNodes.end()) {
-    visitedNodes.insert(this);
+  if (visitedNodes->Lookup(new G_CFLOBDDNodeHandle(this)) == NULL) {
+    visitedNodes->Insert(new G_CFLOBDDNodeHandle(this));
     nodeCount++;
   }
+}
+
+void G_CFLOBDDLeafNode::CountPaths(Hashset<G_CFLOBDDNodeHandle> *visitedNodes)
+{
+  G_CFLOBDDNodeHandle* handle = new G_CFLOBDDNodeHandle(this);
+	if (visitedNodes->Lookup(handle) == NULL) {
+		visitedNodes->Insert(handle);
+	}
 }
 
 //********************************************************************
@@ -601,8 +664,8 @@ G_CFLOBDDForkNode::G_CFLOBDDForkNode()
 {
   numExits = 2;
   numPathsToExit = new long double[2];
-  numPathsToExit[0] = 0;
-  numPathsToExit[1] = 0;
+  numPathsToExit[0] = 1;
+  numPathsToExit[1] = 1;
 }
 
 G_CFLOBDDForkNode::~G_CFLOBDDForkNode()
@@ -670,7 +733,7 @@ G_CFLOBDDDontCareNode::G_CFLOBDDDontCareNode()
 {
   numExits = 1;
   numPathsToExit = new long double[1];
-  numPathsToExit[0] = 1;
+  numPathsToExit[0] = 2;
 }
 
 G_CFLOBDDDontCareNode::~G_CFLOBDDDontCareNode()

@@ -13,31 +13,31 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c17() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    // std::vector<std::string> productions = {
-    //     "S 4 -> S 0 S 3",
-    //     "S 3 -> S 0 S 2",
-    //     "S 2 -> S 0 S 1",
-    //     "S 1 -> S 0 S 0",
-    //     "S 0 -> a"
-    // };
+    std::vector<std::string> productions = {
+        "S 4 -> S 0 S 3",
+        "S 3 -> S 0 S 2",
+        "S 2 -> S 0 S 1",
+        "S 1 -> S 0 S 0",
+        "S 0 -> a"
+    };
     // std::vector<std::string> productions = {
     //     "S 1 -> S 0 S 0 S 0 S 0 S 0",
     //     "S 0 -> a"
     // };
-    std::vector<std::string> productions = {
-        "S 3 -> S 2 S 2", // 8
-        "S 2 -> S 1 S 1", // 4
-        "S 1 -> S 0 S 0", // 2
-        "S 0 -> a"
-    };
-    grammar->constructGrammar(productions, "S 3");
+    // std::vector<std::string> productions = {
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a"
+    // };
+    grammar->constructGrammar(productions, "S 4");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     // Create G_CFLOBDD for c17 circuit
     auto start = high_resolution_clock::now();
 
-    int max_level = 3;
+    int max_level = 4;
 
     G_CFLOBDD gat1 = MkProjection(0, max_level, grammar);
     G_CFLOBDD gat2 = MkProjection(1, max_level, grammar);
@@ -56,17 +56,17 @@ void HardwareBenchmarks::c17() {
 
     // gat1.print(std::cout);
 
-    // std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
-    // Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>(HASH_NUM_BUCKETS);
+    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>(HASH_NUM_BUCKETS);
     // std::vector<G_CFLOBDD> gates = {gat22, gat23};
     unsigned int totalNodeCount = 0, totalEdgeCount = 0;
     unsigned int nodeCount = 0, edgeCount = 0;
-    // gat22.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
-    //     visitedNodesDuringGroupCountNodesAndEdges,
-    //     visitedEdgesDuringGroupCountNodesAndEdges);
-    // gat23.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
-    //     visitedNodesDuringGroupCountNodesAndEdges,
-    //     visitedEdgesDuringGroupCountNodesAndEdges);
+    gat22.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
+        visitedNodesDuringGroupCountNodesAndEdges,
+        visitedEdgesDuringGroupCountNodesAndEdges);
+    gat23.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
+        visitedNodesDuringGroupCountNodesAndEdges,
+        visitedEdgesDuringGroupCountNodesAndEdges);
 
     // delete visitedEdgesDuringGroupCountNodesAndEdges;
 
@@ -74,38 +74,38 @@ void HardwareBenchmarks::c17() {
     cout << "Total Node Count: " << totalNodeCount << ", Total Edge Count: " << totalEdgeCount << endl;
     cout << "Total Size (Nodes + Edges): " << totalNodeCount + totalEdgeCount << endl;
 
-    nodeCount = 0; edgeCount = 0;
-    gat1.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 1 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat2.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 2 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat3.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 3 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat6.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 6 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat7.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 7 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat10.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 10 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat11.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 11 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat16.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 16 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat19.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 19 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat22.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 22 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
-    nodeCount = 0; edgeCount = 0;
-    gat23.CountNodesAndEdges(nodeCount, edgeCount);
-    cout << "Gate 23 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat1.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 1 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat2.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 2 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat3.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 3 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat6.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 6 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat7.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 7 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat10.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 10 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat11.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 11 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat16.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 16 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat19.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 19 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat22.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 22 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
+    // nodeCount = 0; edgeCount = 0;
+    // gat23.CountNodesAndEdges(nodeCount, edgeCount);
+    // cout << "Gate 23 - Node Count: " << nodeCount << ", Edge Count: " << edgeCount << endl;
 
 }

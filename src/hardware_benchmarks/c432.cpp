@@ -11,60 +11,163 @@ using namespace std;
 using namespace HardwareBenchmarks;
 using namespace std::chrono;
 
-void HardwareBenchmarks::c432() {
-    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    // std::vector<std::string> productions = {
-    //     "S 35 -> S 0 S 34",
-    //     "S 34 -> S 0 S 33",
-    //     "S 33 -> S 0 S 32",
-    //     "S 32 -> S 0 S 31",
-    //     "S 31 -> S 0 S 30",
-    //     "S 30 -> S 0 S 29",
-    //     "S 29 -> S 0 S 28",
-    //     "S 28 -> S 0 S 27",
-    //     "S 27 -> S 0 S 26",
-    //     "S 26 -> S 0 S 25",
-    //     "S 25 -> S 0 S 24",
-    //     "S 24 -> S 0 S 23",
-    //     "S 23 -> S 0 S 22",
-    //     "S 22 -> S 0 S 21",
-    //     "S 21 -> S 0 S 20",
-    //     "S 20 -> S 0 S 19",
-    //     "S 19 -> S 0 S 18",
-    //     "S 18 -> S 0 S 17",
-    //     "S 17 -> S 0 S 16",
-    //     "S 16 -> S 0 S 15",
-    //     "S 15 -> S 0 S 14",
-    //     "S 14 -> S 0 S 13",
-    //     "S 13 -> S 0 S 12",
-    //     "S 12 -> S 0 S 11",
-    //     "S 11 -> S 0 S 10",
-    //     "S 10 -> S 0 S 9",
-    //     "S 9 -> S 0 S 8",
-    //     "S 8 -> S 0 S 7",
-    //     "S 7 -> S 0 S 6",
-    //     "S 6 -> S 0 S 5",
-    //     "S 5 -> S 0 S 4",
-    //     "S 4 -> S 0 S 3",
-    //     "S 3 -> S 0 S 2",
-    //     "S 2 -> S 0 S 1",
-    //     "S 1 -> S 0 S 0",
-    //     "S 0 -> a"
-    // };
-    std::vector<std::string> productions = {
-        "S 6 -> S 5 S 5", // 64
-        "S 5 -> S 4 S 4", // 32
-        "S 4 -> S 3 S 3", // 16
-        "S 3 -> S 2 S 2", // 8
-        "S 2 -> S 1 S 1", // 4
-        "S 1 -> S 0 S 0", // 2
+namespace c432_helpers {
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar0Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 5 S 5", // 64
+            "S 5 -> S 4 S 4", // 32
+            "S 4 -> S 3 S 3", // 16
+            "S 3 -> S 2 S 2", // 8
+            "S 2 -> S 1 S 1", // 4
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a"
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar1Productions() {
+        return make_tuple(std::vector<std::string> {
+        "S 35 -> S 0 S 34",
+        "S 34 -> S 0 S 33",
+        "S 33 -> S 0 S 32",
+        "S 32 -> S 0 S 31",
+        "S 31 -> S 0 S 30",
+        "S 30 -> S 0 S 29",
+        "S 29 -> S 0 S 28",
+        "S 28 -> S 0 S 27",
+        "S 27 -> S 0 S 26",
+        "S 26 -> S 0 S 25",
+        "S 25 -> S 0 S 24",
+        "S 24 -> S 0 S 23",
+        "S 23 -> S 0 S 22",
+        "S 22 -> S 0 S 21",
+        "S 21 -> S 0 S 20",
+        "S 20 -> S 0 S 19",
+        "S 19 -> S 0 S 18",
+        "S 18 -> S 0 S 17",
+        "S 17 -> S 0 S 16",
+        "S 16 -> S 0 S 15",
+        "S 15 -> S 0 S 14",
+        "S 14 -> S 0 S 13",
+        "S 13 -> S 0 S 12",
+        "S 12 -> S 0 S 11",
+        "S 11 -> S 0 S 10",
+        "S 10 -> S 0 S 9",
+        "S 9 -> S 0 S 8",
+        "S 8 -> S 0 S 7",
+        "S 7 -> S 0 S 6",
+        "S 6 -> S 0 S 5",
+        "S 5 -> S 0 S 4",
+        "S 4 -> S 0 S 3",
+        "S 3 -> S 0 S 2",
+        "S 2 -> S 0 S 1",
+        "S 1 -> S 0 S 0",
         "S 0 -> a"
-    };
-    // std::vector<std::string> productions = {
-    //     "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 36
-    //     "S 0 -> a"
-    // };
-    grammar->constructGrammar(productions, "S 6");
+        }, "S 35", 35);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar2Productions() {
+        return make_tuple(std::vector<std::string> {
+            // over 36 bits as fibonacci numbers
+            "S 7 -> S 6 S 4", // 26 7
+            "S 6 -> S 4 S 5", // 26 6
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a"
+        }, "S 7", 7);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar3Productions() {
+        return make_tuple(std::vector<std::string> {
+            // over 36 bits as fibonacci numbers
+            "S 7 -> S 4 S 6", // 26 7
+            "S 6 -> S 5 S 4", // 26 6
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a"
+        }, "S 7", 7);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar4Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 4 -> S 3 S 3 S 3", // 36 4
+            "S 3 -> S 2 S 2 S 2", // 12 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 4", 4);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar5Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2 S 2 S 2 S 2", // 8 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 3", 3);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar6Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 36
+            "S 0 -> a"
+        }, "S 1", 1);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar7Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 5 S 2", // 36 6
+            "S 5 -> S 4 S 4", // 32 5
+            "S 4 -> S 3 S 3", // 16 4
+            "S 3 -> S 2 S 2", // 8 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+} // namespace c432_helpers
+
+void HardwareBenchmarks::c432(unsigned int grammarChoice) {
+
+    std::tuple<std::vector<std::string>, std::string, int> grammarData;
+
+    switch (grammarChoice) {
+        case 0:
+            grammarData = c432_helpers::grammar0Productions();
+            break;
+        case 1:
+            grammarData = c432_helpers::grammar1Productions();
+            break;
+        case 2:
+            grammarData = c432_helpers::grammar2Productions();
+            break;
+        case 3:
+            grammarData = c432_helpers::grammar3Productions();
+            break;
+        case 4:
+            grammarData = c432_helpers::grammar4Productions();
+            break;
+        case 5:
+            grammarData = c432_helpers::grammar5Productions();
+            break;
+        case 6:
+            grammarData = c432_helpers::grammar6Productions();
+            break;
+        case 7:
+            grammarData = c432_helpers::grammar7Productions();
+            break;
+        default:
+            throw std::invalid_argument("Invalid grammar choice");
+    }
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(std::get<0>(grammarData), std::get<1>(grammarData));
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -72,46 +175,92 @@ void HardwareBenchmarks::c432() {
 
     int coeff = 1;
     int offset = 0;
-    int max_level = 6;
+    int max_level = std::get<2>(grammarData);
+
+    // std::vector<int> var_order = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    // 							  16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+    // 							  26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
+
+    std::vector<int> var_order = {0, 1, 2, 4, 3, 5, 6, 8, 7, 9, 10, 12, 11, 13, 14, 16,
+                                15, 17, 18, 20, 19, 21, 22, 24, 23, 25,
+                                26, 28, 27, 29, 30, 32, 31, 33, 34, 35};    
+    // std::vector<int> var_order = {0, 1, 18, 2, 27, 3, 19, 4, 28, 5, 20, 6, 29, 7, 21, 8, 30, 9, 22, 10, 31, 11, 23, 12, 32, 13, 24, 14, 33, 15, 25, 16, 34, 17, 26};
 
     // Inputs
-    G_CFLOBDD gat1 = MkProjection(coeff*0 + offset, max_level, grammar);
-    G_CFLOBDD gat4 = MkProjection(coeff*1 + offset, max_level, grammar);
-    G_CFLOBDD gat11 = MkProjection(coeff*2 + offset, max_level, grammar);
-    G_CFLOBDD gat17 = MkProjection(coeff*3 + offset, max_level, grammar);
-    G_CFLOBDD gat24 = MkProjection(coeff*4 + offset, max_level, grammar);
-    G_CFLOBDD gat30 = MkProjection(coeff*5 + offset, max_level, grammar);
-    G_CFLOBDD gat37 = MkProjection(coeff*6 + offset, max_level, grammar);
-    G_CFLOBDD gat43 = MkProjection(coeff*7 + offset, max_level, grammar);
-    G_CFLOBDD gat50 = MkProjection(coeff*8 + offset, max_level, grammar);
-    G_CFLOBDD gat56 = MkProjection(coeff*9 + offset, max_level, grammar);
-    G_CFLOBDD gat63 = MkProjection(coeff*10 + offset, max_level, grammar);
-    G_CFLOBDD gat69 = MkProjection(coeff*11 + offset, max_level, grammar);
-    G_CFLOBDD gat76 = MkProjection(coeff*12 + offset, max_level, grammar);
-    G_CFLOBDD gat82 = MkProjection(coeff*13 + offset, max_level, grammar);
-    G_CFLOBDD gat89 = MkProjection(coeff*14 + offset, max_level, grammar);
-    G_CFLOBDD gat95 = MkProjection(coeff*15 + offset, max_level, grammar);
-    G_CFLOBDD gat102 = MkProjection(coeff*16 + offset, max_level, grammar);
-    G_CFLOBDD gat108 = MkProjection(coeff*17 + offset, max_level, grammar);
-    G_CFLOBDD gat8 = MkProjection(coeff*18 + offset, max_level, grammar);
-    G_CFLOBDD gat21 = MkProjection(coeff*19 + offset, max_level, grammar);
-    G_CFLOBDD gat34 = MkProjection(coeff*20 + offset, max_level, grammar);
-    G_CFLOBDD gat47 = MkProjection(coeff*21 + offset, max_level, grammar);
-    G_CFLOBDD gat60 = MkProjection(coeff*22 + offset, max_level, grammar);
-    G_CFLOBDD gat73 = MkProjection(coeff*23 + offset, max_level, grammar);
-    G_CFLOBDD gat86 = MkProjection(coeff*24 + offset, max_level, grammar);
-    G_CFLOBDD gat99 = MkProjection(coeff*25 + offset, max_level, grammar);
-    G_CFLOBDD gat112 = MkProjection(coeff*26 + offset, max_level, grammar);
-    G_CFLOBDD gat14 = MkProjection(coeff*27 + offset, max_level, grammar);
-    G_CFLOBDD gat27 = MkProjection(coeff*28 + offset, max_level, grammar);
-    G_CFLOBDD gat40 = MkProjection(coeff*29 + offset, max_level, grammar);
-    G_CFLOBDD gat53 = MkProjection(coeff*30 + offset, max_level, grammar);
-    G_CFLOBDD gat66 = MkProjection(coeff*31 + offset, max_level, grammar);
-    G_CFLOBDD gat79 = MkProjection(coeff*32 + offset, max_level, grammar);
-    G_CFLOBDD gat92 = MkProjection(coeff*33 + offset, max_level, grammar);
-    G_CFLOBDD gat105 = MkProjection(coeff*34 + offset, max_level, grammar);
-    G_CFLOBDD gat115 = MkProjection(coeff*35 + offset, max_level, grammar);
-    
+    // G_CFLOBDD gat1 = MkProjection(coeff*0 + offset, max_level, grammar);
+    // G_CFLOBDD gat4 = MkProjection(coeff*1 + offset, max_level, grammar);
+    // G_CFLOBDD gat11 = MkProjection(coeff*2 + offset, max_level, grammar);
+    // G_CFLOBDD gat17 = MkProjection(coeff*3 + offset, max_level, grammar);
+    // G_CFLOBDD gat24 = MkProjection(coeff*4 + offset, max_level, grammar);
+    // G_CFLOBDD gat30 = MkProjection(coeff*5 + offset, max_level, grammar);
+    // G_CFLOBDD gat37 = MkProjection(coeff*6 + offset, max_level, grammar);
+    // G_CFLOBDD gat43 = MkProjection(coeff*7 + offset, max_level, grammar);
+    // G_CFLOBDD gat50 = MkProjection(coeff*8 + offset, max_level, grammar);
+    // G_CFLOBDD gat56 = MkProjection(coeff*9 + offset, max_level, grammar);
+    // G_CFLOBDD gat63 = MkProjection(coeff*10 + offset, max_level, grammar);
+    // G_CFLOBDD gat69 = MkProjection(coeff*11 + offset, max_level, grammar);
+    // G_CFLOBDD gat76 = MkProjection(coeff*12 + offset, max_level, grammar);
+    // G_CFLOBDD gat82 = MkProjection(coeff*13 + offset, max_level, grammar);
+    // G_CFLOBDD gat89 = MkProjection(coeff*14 + offset, max_level, grammar);
+    // G_CFLOBDD gat95 = MkProjection(coeff*15 + offset, max_level, grammar);
+    // G_CFLOBDD gat102 = MkProjection(coeff*16 + offset, max_level, grammar);
+    // G_CFLOBDD gat108 = MkProjection(coeff*17 + offset, max_level, grammar);
+    // G_CFLOBDD gat8 = MkProjection(coeff*18 + offset, max_level, grammar);
+    // G_CFLOBDD gat21 = MkProjection(coeff*19 + offset, max_level, grammar);
+    // G_CFLOBDD gat34 = MkProjection(coeff*20 + offset, max_level, grammar);
+    // G_CFLOBDD gat47 = MkProjection(coeff*21 + offset, max_level, grammar);
+    // G_CFLOBDD gat60 = MkProjection(coeff*22 + offset, max_level, grammar);
+    // G_CFLOBDD gat73 = MkProjection(coeff*23 + offset, max_level, grammar);
+    // G_CFLOBDD gat86 = MkProjection(coeff*24 + offset, max_level, grammar);
+    // G_CFLOBDD gat99 = MkProjection(coeff*25 + offset, max_level, grammar);
+    // G_CFLOBDD gat112 = MkProjection(coeff*26 + offset, max_level, grammar);
+    // G_CFLOBDD gat14 = MkProjection(coeff*27 + offset, max_level, grammar);
+    // G_CFLOBDD gat27 = MkProjection(coeff*28 + offset, max_level, grammar);
+    // G_CFLOBDD gat40 = MkProjection(coeff*29 + offset, max_level, grammar);
+    // G_CFLOBDD gat53 = MkProjection(coeff*30 + offset, max_level, grammar);
+    // G_CFLOBDD gat66 = MkProjection(coeff*31 + offset, max_level, grammar);
+    // G_CFLOBDD gat79 = MkProjection(coeff*32 + offset, max_level, grammar);
+    // G_CFLOBDD gat92 = MkProjection(coeff*33 + offset, max_level, grammar);
+    // G_CFLOBDD gat105 = MkProjection(coeff*34 + offset, max_level, grammar);
+    // G_CFLOBDD gat115 = MkProjection(coeff*35 + offset, max_level, grammar);
+
+    G_CFLOBDD gat1 =  MkProjection(var_order[0], max_level, grammar);
+    G_CFLOBDD gat4 =  MkProjection(var_order[1], max_level, grammar);
+    G_CFLOBDD gat8 =  MkProjection(var_order[2], max_level, grammar);
+    G_CFLOBDD gat11 =  MkProjection(var_order[3], max_level, grammar);
+    G_CFLOBDD gat14 =  MkProjection(var_order[4], max_level, grammar);
+    G_CFLOBDD gat17 =  MkProjection(var_order[5], max_level, grammar);
+    G_CFLOBDD gat21 =  MkProjection(var_order[6], max_level, grammar);
+    G_CFLOBDD gat24 =  MkProjection(var_order[7], max_level, grammar);
+    G_CFLOBDD gat27 =  MkProjection(var_order[8], max_level, grammar);
+    G_CFLOBDD gat30 =  MkProjection(var_order[9], max_level, grammar);
+    G_CFLOBDD gat34 =  MkProjection(var_order[10], max_level, grammar);
+    G_CFLOBDD gat37 =  MkProjection(var_order[11], max_level, grammar);
+    G_CFLOBDD gat40 =  MkProjection(var_order[12], max_level, grammar);
+    G_CFLOBDD gat43 =  MkProjection(var_order[13], max_level, grammar);
+    G_CFLOBDD gat47 =  MkProjection(var_order[14], max_level, grammar);
+    G_CFLOBDD gat50 =  MkProjection(var_order[15], max_level, grammar);
+    G_CFLOBDD gat53 =  MkProjection(var_order[16], max_level, grammar);
+    G_CFLOBDD gat56 =  MkProjection(var_order[17], max_level, grammar);
+    G_CFLOBDD gat60 =  MkProjection(var_order[18], max_level, grammar);
+    G_CFLOBDD gat63 =  MkProjection(var_order[19], max_level, grammar);
+    G_CFLOBDD gat66 =  MkProjection(var_order[20], max_level, grammar);
+    G_CFLOBDD gat69 =  MkProjection(var_order[21], max_level, grammar);
+    G_CFLOBDD gat73 =  MkProjection(var_order[22], max_level, grammar);
+    G_CFLOBDD gat76 =  MkProjection(var_order[23], max_level, grammar);
+    G_CFLOBDD gat79 =  MkProjection(var_order[24], max_level, grammar);
+    G_CFLOBDD gat82 =  MkProjection(var_order[25], max_level, grammar);
+    G_CFLOBDD gat86 =  MkProjection(var_order[26], max_level, grammar);
+    G_CFLOBDD gat89 =  MkProjection(var_order[27], max_level, grammar);
+    G_CFLOBDD gat92 =  MkProjection(var_order[28], max_level, grammar);
+    G_CFLOBDD gat95 =  MkProjection(var_order[29], max_level, grammar);
+    G_CFLOBDD gat99 =  MkProjection(var_order[30], max_level, grammar);
+    G_CFLOBDD gat102 =  MkProjection(var_order[31], max_level, grammar);
+    G_CFLOBDD gat105 =  MkProjection(var_order[32], max_level, grammar);
+    G_CFLOBDD gat108 =  MkProjection(var_order[33], max_level, grammar);
+    G_CFLOBDD gat112 =  MkProjection(var_order[34], max_level, grammar);
+    G_CFLOBDD gat115 =  MkProjection(var_order[35], max_level, grammar);
+
     // Outputs: gat223,gat329,gat370,gat421,gat430,gat431,gat432;
     
     // The circuit
@@ -441,21 +590,27 @@ void HardwareBenchmarks::c432() {
     cout << "gat432" << endl;
     G_CFLOBDD gat432 = MkNand(MkNand(gat381, gat422), MkNand(gat425, gat429));
     auto end = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(end - start);   
+    auto duration = duration_cast<milliseconds>(end - start);  
+    
+    std::vector<G_CFLOBDD> outputs = {gat223, gat329, gat370, gat421, gat430, gat431, gat432};
 
     unsigned int nodeCount = 0, edgeCount = 0;
-    std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
+    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>;
     Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
-    gat223.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat329.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat370.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat421.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat430.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat431.GroupCountNodesAndEdges(nodeCount, edgeCount,  visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    gat432.GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    for (int i = 0; i < outputs.size(); i++) {
+        outputs[i].GroupCountNodesAndEdges(nodeCount, edgeCount, visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    }
+
+    for (int i = 0; i < outputs.size(); i++) {
+        unsigned int localNodeCount = 0, localEdgeCount = 0;
+        outputs[i].CountNodesAndEdges(localNodeCount, localEdgeCount);
+        cout << "Output " << i << " has " << localNodeCount << " nodes and " << localEdgeCount << " edges and total of " << (localNodeCount + localEdgeCount) << endl;
+    }
     
     cout << "C432 took " << duration.count() << " milliseconds." << endl;
     cout << "Total nodes in outputs: " << nodeCount << endl;
     cout << "Total edges in outputs: " << edgeCount << endl;
     cout << "Total count: " << nodeCount + edgeCount << endl;
+
+
 }

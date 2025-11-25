@@ -27,7 +27,8 @@ class G_CFLOBDD_T {
   ref_ptr<G_CFLOBDDTopNodeT<T>> root;
 
   void CountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount);
-  void GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, std::unordered_set<G_CFLOBDDNode*>& visitedNodesDuringGroupCountNodesAndEdges,
+  void CountPaths();
+  void GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges,
 	  Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges);
   void PrintYield(std::ostream & out = std::cout) const;
 
@@ -147,7 +148,7 @@ G_CFLOBDD_T<T> operator*(unsigned int c, G_CFLOBDD_T<T> g)
 template<typename T>
 G_CFLOBDD_T<T> operator*(int c, G_CFLOBDD_T<T> g)
 {
-	return G_CFLOBDD_T<T>(MkLeftScalarTimesTopNode(c, g.root));
+	return G_CFLOBDD_T<T>(MkLeftScalarTimesTopNode<int, T>(c, g.root));
 }
 
 // Left scalar-multiplication: \c:double.\g.(c * g)
@@ -181,8 +182,8 @@ G_CFLOBDD_T<T> operator*(G_CFLOBDD_T<T> f, G_CFLOBDD_T<T> g)
 template<typename T>
 void G_CFLOBDD_T<T>::CountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount)
 {
-	std::unordered_set<G_CFLOBDDNode*> visitedNodes;
-	Hashset<G_CFLOBDDReturnMapBody> *visitedEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+	Hashset<G_CFLOBDDNodeHandle> *visitedNodes = new Hashset<G_CFLOBDDNodeHandle>(HASH_NUM_BUCKETS);
+	Hashset<G_CFLOBDDReturnMapBody> *visitedEdges = new Hashset<G_CFLOBDDReturnMapBody>(HASH_NUM_BUCKETS);
 	nodeCount = 0;
 	edgeCount = 0;
 	root->CountNodesAndEdges(visitedNodes, visitedEdges, nodeCount, edgeCount);
@@ -190,12 +191,20 @@ void G_CFLOBDD_T<T>::CountNodesAndEdges(unsigned int &nodeCount, unsigned int &e
 }
 
 template<typename T>
-void G_CFLOBDD_T<T>::GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, std::unordered_set<G_CFLOBDDNode*>& visitedNodesDuringGroupCountNodesAndEdges,
+void G_CFLOBDD_T<T>::GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges,
 							Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges)
 {
 	root->CountNodesAndEdges(visitedNodesDuringGroupCountNodesAndEdges,
 							visitedEdgesDuringGroupCountNodesAndEdges,
                            nodeCount, edgeCount);
+}
+
+template<typename T>
+void G_CFLOBDD_T<T>::CountPaths()
+{
+	Hashset<G_CFLOBDDNodeHandle> *visitedNodes = new Hashset<G_CFLOBDDNodeHandle>;
+	root->CountPaths(visitedNodes);
+	delete visitedNodes;
 }
 
 

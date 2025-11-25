@@ -31,10 +31,21 @@ ConnectionT<Handle>::ConnectionT(G_CFLOBDDNode *entryPoint, Handle &returnMapHan
 {
 }
 
-// template <typename Handle>
-// ConnectionT<Handle>::~ConnectionT()
-// {
-// }
+// Copy constructor
+template <typename Handle>
+ConnectionT<Handle>::ConnectionT(const ConnectionT<Handle> &C)
+{
+	entryPointHandle = new G_CFLOBDDNodeHandle(*(C.entryPointHandle));
+	returnMapHandle = C.returnMapHandle;
+}
+
+// Destructor
+template <typename Handle>
+ConnectionT<Handle>::~ConnectionT()
+{
+	delete entryPointHandle;
+	entryPointHandle = NULL;
+}
 
 // Hash
 template <typename Handle>
@@ -51,7 +62,7 @@ ConnectionT<Handle>& ConnectionT<Handle>::operator= (const ConnectionT<Handle>& 
 {
 	if (this != &C)      // don't assign to self!
 	{
-		entryPointHandle = C.entryPointHandle;
+		entryPointHandle = new G_CFLOBDDNodeHandle(*(C.entryPointHandle));
 		returnMapHandle = C.returnMapHandle;
 	}
 	return *this;

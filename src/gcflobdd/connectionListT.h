@@ -1,71 +1,62 @@
-#ifndef CONNECTIONLIST_T_H
-#define CONNECTIONLIST_T_H
+#ifndef _CONNECTION_LIST_T_H
+#define _CONNECTION_LIST_T_H
 
+#include <cassert>
+#include <cstdlib>
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include "../utils/hashset.h"
 #include "connectionT.h"
 
 namespace G_CFL_OBDD {
 
-template <typename T> class ConnectionListTHandle;
-template <typename T> class ConnectionListTBody;
+	template <typename Handle>
+	class ConnectionListT
+	{
+	public:
+		ConnectionListT();                                  // Default constructor
+		ConnectionListT(const ConnectionListT &C);              // Copy constructor
+		ConnectionListT(unsigned int capacity);
+		~ConnectionListT();                                 // Destructor
 
-//***************************************************************
-// ConnectionListTHandle
-//***************************************************************
+		unsigned int Hash(unsigned int modsize) const;
+		void Reserve(unsigned int capacity);
+		ConnectionListT& operator= (const ConnectionListT &C);   // Overloaded =
+		bool operator!= (const ConnectionListT & C) const;        // Overloaded !=
+		bool operator== (const ConnectionListT & C) const;        // Overloaded ==
+		void AddConnection(ConnectionT<Handle>& y);
+		ConnectionT<Handle> Lookup(int x);
+		long int LookupInv(ConnectionT<Handle>& y);
+		unsigned int Size();
+		ConnectionT<Handle>& operator[](unsigned int i);                       // Overloaded []
 
-template <typename T>
-class ConnectionListTHandle {
- public:
-  ConnectionListTHandle();                               // Default constructor
-  ConnectionListTHandle(unsigned int capacity);
-  ~ConnectionListTHandle();                              // Destructor
-  ConnectionListTHandle(const ConnectionListTHandle<T> &r);    // Copy constructor
-  ConnectionListTHandle<T>& operator= (const ConnectionListTHandle<T> &r); // Overloaded assignment
-  bool operator!= (const ConnectionListTHandle<T> &r) const;      // Overloaded !=
-  bool operator== (const ConnectionListTHandle<T> &r) const;      // Overloaded ==
-  ConnectionT<T>& operator[](unsigned int i);                       // Overloaded []
-  unsigned int Hash(unsigned int modsize) const;
-  unsigned int Size();
-  void AddConnection(ConnectionT<T>& y);
-  ConnectionT<T> Lookup(int x);
-  long int LookupInv(ConnectionT<T>& y);
-  void Canonicalize();
-  ConnectionListTBody<T> *connectionList;
-  static Hashset<ConnectionListTBody<T>> *canonicalConnectionListTBodySet;
-  std::ostream& print(std::ostream & out = std::cout) const;
-};
+		// std::vector<ConnectionT<Handle>> connections;
+		ConnectionT<Handle>* connections;
+    	unsigned int numConnections;
+		unsigned int currentConnectionIndex;
 
-template <typename T>
-std::ostream& operator<< (std::ostream & out, const ConnectionListTHandle<T> &r);
+	public:
+		std::ostream& print(std::ostream & out = std::cout) const;
 
-//***************************************************************
-// ConnectionListTBody
-//***************************************************************
+		struct ConnectionListHash {
+		public:
+			size_t operator()(const ConnectionListT<Handle>& c) const {
+				return c.Hash(997);
+			}
+		};
 
-template <typename T>
-class ConnectionListTBody {
+		struct ConnectionListEqual {
+		public:
+			bool operator()(const ConnectionListT<Handle>& a, const ConnectionListT<Handle>& b) const {
+				return (a == b);
+			}
+		};
+	};
 
-  friend void ConnectionListTHandle<T>::Canonicalize();
-  friend unsigned int ConnectionListTHandle<T>::Hash(unsigned int modsize) const;
 
- public:
-  ConnectionListTBody();    // Constructor
-  ConnectionListTBody(unsigned int capacity);    // Constructor
-  ~ConnectionListTBody();
-  void IncrRef();
-  void DecrRef();
-  unsigned int Hash(unsigned int modsize) const;
-  unsigned int refCount;         // reference-count value
-  std::vector<ConnectionT<T>> connections;
-  bool operator==(const ConnectionListTBody<T> &o) const;
-  ConnectionT<T>& operator[](unsigned int i);                       // Overloaded []
+	template <typename Handle>
+	std::ostream& operator<< (std::ostream & out, const ConnectionListT<Handle> &c);
 
- protected:
-  bool isCanonical;              // Is this ConnectionListTBody in *canonicalConnectionListTBodySet?
-
-};
 }
-#endif // CONNECTIONLIST_T_H
+
+#endif
+
