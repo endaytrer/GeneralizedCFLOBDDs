@@ -6,6 +6,7 @@
 #include "visualization/visualize.h"
 #include "hardware_benchmarks/hardware_tests.h"
 #include "ops/cross_product.h"
+#include "ops/cross_product_bdd.h"
 #include <chrono>
 using namespace G_CFL_OBDD;
 using namespace std;
@@ -940,6 +941,274 @@ void Tests::testSynFun8() {
     std::cout << "nodeCount: " << nodeCount << " edgeCount: " << edgeCount << " totalCount: " << (nodeCount + edgeCount) << std::endl;
 }
 
+G_CFLOBDD computeSyn9Function(const std::vector<G_CFLOBDD>& vars, int startIndex, int n, unsigned int level, std::shared_ptr<Grammar> grammar) {
+    G_CFLOBDD F1 = MkTrue(level, grammar);
+    std::vector<std::string> boolOps = {"MkAnd", "MkOr", "MkExclusiveOr", "MkNor", "MkNand"};
+    for (int i = 0; i < n; i++) {
+        // std::cout << "Combining variable " << (startIndex + i) << " / " << (startIndex + n - 1) << std::endl;
+        G_CFLOBDD var = vars[startIndex + i];
+        if (i % 2 == 0) {
+            var = MkNot(var);
+        }
+        auto op_s = boolOps[i % boolOps.size()];
+        if (op_s == "MkAnd") {
+            F1 = MkAnd(F1, var);
+        } else if (op_s == "MkOr") {
+            F1 = MkOr(F1, var);
+        } else if (op_s == "MkExclusiveOr") {
+            F1 = MkExclusiveOr(F1, var);
+        } else if (op_s == "MkNor") {
+            F1 = MkNor(F1, var);
+        } else if (op_s == "MkNand") {
+            F1 = MkNand(F1, var);
+        }
+    }
+
+    // vars: G0 G1 G2 G3 G4
+    // ((((NOT(G0) OR G1) ExOR NOT(G2)) NOR G3) NAND NOT(G4))
+
+    auto F = F1;
+    return F;
+}
+
+void Tests::testSynFun9() {
+    // std::vector<std::string> productions = {
+    //     // Define the grammar productions here
+    //     // "S 20 -> S 19 S 19", // 1048576
+    //     "S 19 -> S 18 S 18", // 524288
+    //     "S 18 -> S 17 S 17", // 262144
+    //     "S 17 -> S 16 S 16", // 131072
+    //     "S 16 -> S 15 S 15", // 65536
+    //     "S 15 -> S 14 S 14", // 32768
+    //     "S 14 -> S 13 S 13", // 16384
+    //     "S 13 -> S 12 S 12", // 8192
+    //     "S 12 -> S 11 S 11", // 4096
+    //     "S 11 -> S 10 S 10", // 2048
+    //     "S 10 -> S 9 S 9", // 1024
+    //     "S 9 -> S 8 S 8", // 512
+    //     "S 8 -> S 7 S 7", // 256
+    //     "S 7 -> S 6 S 6", // 128
+    //     "S 6 -> S 5 S 5", // 64
+    //     "S 5 -> S 4 S 4", // 32
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a"
+    // };
+
+    std::vector<std::string> productions = {
+        "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
+        "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 2310 * 13 = 30030
+        "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 210 * 11 = 2310
+        "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 30 * 7 = 210
+        "S 3 -> S 2 S 2 S 2 S 2 S 2", // 6 * 5 = 30
+        "S 2 -> S 1 S 1 S 1", // 2 * 3 = 6
+        "S 1 -> S 0 S 0", // 2
+        "S 0 -> a"
+    };
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(productions, "S 7");
+    grammar->InstallNumVars();
+    grammar->updateLevel();
+
+    auto start = high_resolution_clock::now();
+	unsigned int numVars = 510510; // 59049 + 1
+	unsigned int level = grammar->root->level;
+	std::vector<G_CFLOBDD> vars;
+	for (unsigned int i = 0; i < numVars; i++) {
+        if (i % 10000 == 0) {
+            std::cout << "Creating projection for variable " << i << " / " << numVars << std::endl;
+        }
+		vars.push_back(MkProjection(i, level, grammar));
+	}
+    
+    std::vector<int> groupIndices = {2, 3, 5, 7, 11, 13, 17};
+    
+    std::vector<G_CFLOBDD> groupFunctions = vars;
+    for (unsigned int i = 0; i < groupIndices.size(); i++) {
+        // vars[0] vars[1] vars[2] vars[3]...
+        // std::cout << "Combining group functions in groups of " << groupIndices[i] << std::endl;
+        std::vector<G_CFLOBDD> tmpGroupFunctions;
+        std::cout << "Number of group functions to process: " << groupFunctions.size() << std::endl;
+        for (int j = 0; j < groupFunctions.size(); j += groupIndices[i]) {
+            // std::cout << "Processing group starting at index " << j << std::endl;
+            G_CFLOBDD gf = computeSyn9Function(groupFunctions, j, groupIndices[i], level, grammar);
+            tmpGroupFunctions.push_back(gf);
+        }
+        groupFunctions = tmpGroupFunctions;
+        // F(vars[0], vars[1]) F(vars[2], vars[3]), ...
+    }
+
+    auto F = groupFunctions[0];
+
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(end - start);
+    std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+
+    unsigned int nodeCount = 0, edgeCount = 0;
+    F.CountNodesAndEdges(nodeCount, edgeCount);
+    std::cout << "nodeCount: " << nodeCount << " edgeCount: " << edgeCount << " totalCount: " << (nodeCount + edgeCount) << std::endl;
+}
+
+void Tests::testSynFun10() {
+    // std::vector<std::string> productions = {
+    //     // Define the grammar productions here
+    //     // "S 20 -> S 19 S 19", // 1048576
+    //     // "S 19 -> S 18 S 18", // 524288
+    //     "S 18 -> S 17 S 17", // 262144
+    //     "S 17 -> S 16 S 16", // 131072
+    //     "S 16 -> S 15 S 15", // 65536
+    //     "S 15 -> S 14 S 14", // 32768
+    //     "S 14 -> S 13 S 13", // 16384
+    //     "S 13 -> S 12 S 12", // 8192
+    //     "S 12 -> S 11 S 11", // 4096
+    //     "S 11 -> S 10 S 10", // 2048
+    //     "S 10 -> S 9 S 9", // 1024
+    //     "S 9 -> S 8 S 8", // 512
+    //     "S 8 -> S 7 S 7", // 256
+    //     "S 7 -> S 6 S 6", // 128
+    //     "S 6 -> S 5 S 5", // 64
+    //     "S 5 -> S 4 S 4", // 32
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a"
+    // };
+
+    std::vector<std::string> productions = {
+        // "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
+        "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 10395 * 13 = 135135
+        "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 945 * 11 = 10395
+        "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 105 * 9 = 945
+        "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2 S 2", // 15 * 7 = 105
+        "S 2 -> S 1 S 1 S 1 S 1 S 1", // 3 * 5 = 15
+        "S 1 -> S 0 S 0 S 0", // 3
+        "S 0 -> a"
+    };
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(productions, "S 6");
+    grammar->InstallNumVars();
+    grammar->updateLevel();
+
+    auto start = high_resolution_clock::now();
+	unsigned int numVars = 135135; // 59049 + 1
+	unsigned int level = grammar->root->level;
+	std::vector<G_CFLOBDD> vars;
+	for (unsigned int i = 0; i < numVars; i++) {
+        if (i % 10000 == 0) {
+            std::cout << "Creating projection for variable " << i << " / " << numVars << std::endl;
+        }
+		vars.push_back(MkProjection(i, level, grammar));
+	}
+    
+    std::vector<int> groupIndices = {3, 5, 7, 9, 11, 13};
+    
+    std::vector<G_CFLOBDD> groupFunctions = vars;
+    for (unsigned int i = 0; i < groupIndices.size(); i++) {
+        // std::cout << "Combining group functions in groups of " << groupIndices[i] << std::endl;
+        std::vector<G_CFLOBDD> tmpGroupFunctions;
+        std::cout << "Number of group functions to process: " << groupFunctions.size() << std::endl;
+        for (int j = 0; j < groupFunctions.size(); j += groupIndices[i]) {
+            // std::cout << "Processing group starting at index " << j << std::endl;
+            G_CFLOBDD gf = computeSyn9Function(groupFunctions, j, groupIndices[i], level, grammar);
+            tmpGroupFunctions.push_back(gf);
+        }
+        groupFunctions = tmpGroupFunctions;
+    }
+
+    auto F = groupFunctions[0];
+
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(end - start);
+    std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+
+    unsigned int nodeCount = 0, edgeCount = 0;
+    F.CountNodesAndEdges(nodeCount, edgeCount);
+    std::cout << "nodeCount: " << nodeCount << " edgeCount: " << edgeCount << " totalCount: " << (nodeCount + edgeCount) << std::endl;
+}
+
+void Tests::testSynFun11() {
+    std::vector<std::string> productions = {
+        // Define the grammar productions here
+        // "S 20 -> S 19 S 19", // 1048576
+        // "S 19 -> S 18 S 18", // 524288
+        // "S 18 -> S 17 S 17", // 262144
+        // "S 17 -> S 16 S 16", // 131072
+        // "S 16 -> S 15 S 15", // 65536
+        // "S 15 -> S 14 S 14", // 32768
+        "S 14 -> S 13 S 13", // 16384
+        "S 13 -> S 12 S 12", // 8192
+        "S 12 -> S 11 S 11", // 4096
+        "S 11 -> S 10 S 10", // 2048
+        "S 10 -> S 9 S 9", // 1024
+        "S 9 -> S 8 S 8", // 512
+        "S 8 -> S 7 S 7", // 256
+        "S 7 -> S 6 S 6", // 128
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
+        "S 0 -> a"
+    };
+
+    // std::vector<std::string> productions = {
+    //     "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 720 * 15 = 10800
+    //     "S 5 -> S 4 S 4 S 4", // 240 * 3 = 720
+    //     "S 4 -> S 3 S 3 S 3 S 3", // 60 * 4 = 240
+    //     "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2", // 10 * 6 = 60
+    //     "S 2 -> S 1 S 1", // 5 * 2 = 10
+    //     "S 1 -> S 0 S 0 S 0 S 0 S 0", // 5
+    //     "S 0 -> a"
+    // };
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(productions, "S 14");
+    grammar->InstallNumVars();
+    grammar->updateLevel();
+
+    auto start = high_resolution_clock::now();
+	unsigned int numVars = 10800; // 59049 + 1
+	unsigned int level = grammar->root->level;
+	std::vector<G_CFLOBDD> vars;
+	for (unsigned int i = 0; i < numVars; i++) {
+        if (i % 10000 == 0) {
+            std::cout << "Creating projection for variable " << i << " / " << numVars << std::endl;
+        }
+		vars.push_back(MkProjection(i, level, grammar));
+	}
+    
+    std::vector<int> groupIndices = {5, 2, 6, 4, 3, 15};
+    
+    std::vector<G_CFLOBDD> groupFunctions = vars;
+    for (unsigned int i = 0; i < groupIndices.size(); i++) {
+        // std::cout << "Combining group functions in groups of " << groupIndices[i] << std::endl;
+        std::vector<G_CFLOBDD> tmpGroupFunctions;
+        std::cout << "Number of group functions to process: " << groupFunctions.size() << std::endl;
+        for (int j = 0; j < groupFunctions.size(); j += groupIndices[i]) {
+            // std::cout << "Processing group starting at index " << j << std::endl;
+            G_CFLOBDD gf = computeSyn9Function(groupFunctions, j, groupIndices[i], level, grammar);
+            tmpGroupFunctions.push_back(gf);
+        }
+        groupFunctions = tmpGroupFunctions;
+    }
+
+    auto F = groupFunctions[0];
+
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(end - start);
+    std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+
+    unsigned int nodeCount = 0, edgeCount = 0;
+    F.CountNodesAndEdges(nodeCount, edgeCount);
+    std::cout << "nodeCount: " << nodeCount << " edgeCount: " << edgeCount << " totalCount: " << (nodeCount + edgeCount) << std::endl;
+}
+
 void Tests::testC17() {
     HardwareBenchmarks::c17();
 }
@@ -1039,11 +1308,13 @@ void Tests::testNQueens(unsigned int n, unsigned int grammarChoice) {
         case 1:
             {
                 std::vector<std::string> productions = {
-                    "S 2 -> S 1 S 1 S 1 S 1 S 1 S 1 S 1 S 1 S 1 S 1", // 8 * 8
+                    "S 4 -> S 3 S 3",
+                    "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2 S 2 S 2 S 2 S 2", // 16 * 8 = 128
+                    "S 2 -> S 1 S 1", // 16
                     "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 8
                     "S 0 -> a"
                 };
-                grammar->constructGrammar(productions, "S 2");
+                grammar->constructGrammar(productions, "S 4");
                 grammar->InstallNumVars();
                 grammar->updateLevel(); 
             }
@@ -1171,6 +1442,7 @@ void Tests::testNQueens(unsigned int n, unsigned int grammarChoice) {
 	std::vector<std::vector<G_CFLOBDD>> impBatch;
 
 	for (int i = 0; i < n; i++) {
+        std::cout << "Processing implications for row " << i << " / " << n << std::endl;
         std::vector<G_CFLOBDD> row;
 		for (int j = 0; j < n; j++) {
 			G_CFLOBDD a = MkTrue(std::ceil(std::log2(numVars)), grammar);
@@ -1229,13 +1501,17 @@ void Tests::testNQueens(unsigned int n, unsigned int grammarChoice) {
 	G_CFLOBDD queen = MkTrue(std::ceil(std::log2(numVars)), grammar);
 
 	for (int i = 0; i < n; i++) {
+        std::cout << "Combining OR conditions for row " << i << " / " << n << std::endl;
 		queen = MkAnd(queen, orBatch[i]);
 	}
 
 	for (int i = 0; i < n; i++) {
+        G_CFLOBDD tmp_queen = MkTrue(std::ceil(std::log2(numVars)), grammar);
 		for (int j = 0; j < n; j++) {
-			queen = MkAnd(queen, impBatch[i][j]);
+            std::cout << "Combining implication conditions for position (" << i << ", " << j << ") " << " / " << n << std::endl;
+			tmp_queen = MkAnd(tmp_queen, impBatch[i][j]);
 		}
+        queen = MkAnd(queen, tmp_queen);
 	}
 
 	auto end = high_resolution_clock::now();
@@ -1253,15 +1529,46 @@ void Tests::testNQueens(unsigned int n, unsigned int grammarChoice) {
     std::cout << "Number of solutions for " << n << "-Queens: " << queen_node->numPathsToExit[1] << std::endl;
 }
 
+void Tests::testBDDGrammar() {
+    std::vector<std::string> productions = {
+        "S 0 -> BDD(5)"
+    };
+
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(productions, "S 0");
+    grammar->InstallNumVars();
+    grammar->updateLevel(); 
+
+    G_CFLOBDD gat1 = MkProjection(0, grammar->root->level, grammar);
+    G_CFLOBDD gat2 = MkProjection(1, grammar->root->level, grammar);
+    G_CFLOBDD gat3 = MkProjection(2, grammar->root->level, grammar);
+    G_CFLOBDD gat6 = MkProjection(3, grammar->root->level, grammar);
+    G_CFLOBDD gat7 = MkProjection(4, grammar->root->level, grammar);
+    G_CFLOBDD gat10 = MkNand(gat1, gat3);
+    G_CFLOBDD gat11 = MkNand(gat3, gat6);
+    gat11.PrintYield();
+    // G_CFLOBDD gat16 = MkNand(gat2, gat11);
+    // G_CFLOBDD gat19 = MkNand(gat11, gat7);
+    // G_CFLOBDD gat22 = MkNand(gat10, gat16);
+    // G_CFLOBDD gat23 = MkNand(gat16, gat19);
+
+    // gat22.PrintYield();
+    // gat23.PrintYield();
+}
+
 void RunInit() {
     G_CFLOBDDNodeHandle::InitLeafNodes();
     InitPairProductCache();
+    InitBDDPairProductCache();
     G_CFLOBDDNodeHandle::InitReduceCache();
+    BDDNodeHandle::InitReduceCache();
 }
 
 void ClearUp() {
     G_CFLOBDDNodeHandle::DisposeOfReduceCache();
     DisposeOfPairProductCache();
+    DisposeOfBDDPairProductCache();
+    BDDNodeHandle::DisposeOfReduceCache();
 }
 
 void Tests::runTests(std::string testName, unsigned int grammarChoice, unsigned int n) {
@@ -1299,7 +1606,13 @@ void Tests::runTests(std::string testName, unsigned int grammarChoice, unsigned 
         testSynFun7();
     } else if (testName == "testSynFun8") {
         testSynFun8();
-    } else if (testName == "testC17") {
+    } else if (testName == "testSynFun9") {
+        testSynFun9();
+    } else if (testName == "testSynFun10") {
+        testSynFun10();
+    } else if (testName == "testSynFun11") {
+        testSynFun11();
+    }   else if (testName == "testC17") {
         testC17();
     } else if (testName == "testC432") {
         testC432(grammarChoice);
@@ -1317,7 +1630,10 @@ void Tests::runTests(std::string testName, unsigned int grammarChoice, unsigned 
         testC6288_16(grammarChoice);
     } else if (testName == "testNQueens") {
         testNQueens(n, grammarChoice);
-    } else {
+    } else if (testName == "testBDDGrammar") {
+        testBDDGrammar();
+    }
+    else {
         std::cout << "Unknown test name: " << testName << std::endl;
     }
     ClearUp();

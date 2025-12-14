@@ -138,13 +138,14 @@ namespace G_CFL_OBDD{
     template <typename T>
     void G_CFLOBDDTopNodeT<T>::PrintYield(std::ostream & out) const
     {
-        std::vector<std::vector<std::string>> yield_strings;
+        std::unordered_map<int, std::vector<std::string>> yield_strings;
         rootConnection.entryPointHandle->handleContents->PrintYield(yield_strings);
-        for (unsigned int i = 0; i < yield_strings.size(); i++){
-            for (const auto& s : yield_strings[i]){
-                // out << s << " " << rootConnection.returnMapHandle.Lookup(i) << std::endl;
+        for (const auto& pair : yield_strings) {
+            for (const auto& str : pair.second) {
+                out << str << " " << rootConnection.returnMapHandle.Lookup(pair.first) << std::endl;
             }
         }
+        out << std::endl;
     }
 
     template <typename T>
@@ -160,6 +161,14 @@ namespace G_CFL_OBDD{
         G_CFLOBDDNodeHandle n = PairProduct(*(n1->rootConnection.entryPointHandle),
             *(n2->rootConnection.entryPointHandle),
             MapHandle);
+
+        // unsigned int nCount = 0, eCount = 0;
+        // Hashset<G_CFLOBDDNodeHandle>* visitedNodes = new Hashset<G_CFLOBDDNodeHandle>(1000);
+        // Hashset<G_CFLOBDDReturnMapBody>* visitedEdges = new Hashset<G_CFLOBDDReturnMapBody>(1000);
+        // n.handleContents->CountNodesAndEdges(visitedNodes, visitedEdges, nCount, eCount);
+        // delete visitedNodes;
+        // delete visitedEdges;
+        // std::cout << "After PairProduct: Nodes = " << nCount << ", Edges = " << eCount << std::endl;
 
         // Create returnMapHandle from MapHandle: Fold the pairs in MapHandle by applying
         // [n1->rootConnection.returnMapHandle, n2->rootConnection.returnMapHandle]
@@ -190,6 +199,14 @@ namespace G_CFL_OBDD{
         reductionMapHandle.Canonicalize();
 
         G_CFLOBDDNodeHandle reduced_n = n.Reduce(reductionMapHandle, returnMapHandle.Size());
+
+        // nCount = 0; eCount = 0;
+        // Hashset<G_CFLOBDDNodeHandle>* visitedNodes1 = new Hashset<G_CFLOBDDNodeHandle>(1000);
+        // Hashset<G_CFLOBDDReturnMapBody>* visitedEdges1 = new Hashset<G_CFLOBDDReturnMapBody>(1000);
+        // reduced_n.handleContents->CountNodesAndEdges(visitedNodes1, visitedEdges1, nCount, eCount);
+        // delete visitedNodes1;
+        // delete visitedEdges1;
+        // std::cout << "After Reduce: Nodes = " << nCount << ", Edges = " << eCount << std::endl;
 
         // Create and return G_CFLOBDDTopNode
         return(new G_CFLOBDDTopNodeT<T>(reduced_n, returnMapHandle));

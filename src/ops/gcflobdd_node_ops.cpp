@@ -1,6 +1,8 @@
 #include "gcflobdd_node_ops.h"
 #include <unordered_map>
 #include "../gcflobdd/gcflobdd_node.h"
+#include "../gcflobdd/gcflobdd_bdd_node.h"
+#include "bdd_node_ops.h"
 
 namespace G_CFL_OBDD {
 
@@ -41,7 +43,7 @@ G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarN
     if (G_CFLOBDDNodeHandle::NoDistinctionNode.find(key) != G_CFLOBDDNodeHandle::NoDistinctionNode.end()) {
         return G_CFLOBDDNodeHandle::NoDistinctionNode[key];
     }
-    if (grammar->level == 0) {
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         GrammarNonTerminalNode* gNode = dynamic_cast<GrammarNonTerminalNode*>(grammar.get());
         assert(gNode != nullptr);
         assert(gNode->children.size() == 1);
@@ -49,6 +51,12 @@ G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarN
         assert(gNode->children[0]->level == 0);
         G_CFLOBDDNodeHandle::NoDistinctionNode[key] = G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
         return G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkNoDistinction_BDD(grammar->numVars);
+        G_CFLOBDDNodeHandle::NoDistinctionNode[key] = handle;
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);
@@ -105,10 +113,16 @@ G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::share
     //     return distinctionNode[key];
     // }
 
-    if (grammar->level == 0) {
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         assert(i == 0);
         // distinctionNode[key] = G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
         return G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkDistinction_BDD(grammar->numVars, i);
+        // distinctionNode[key] = handle;
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);
@@ -167,8 +181,13 @@ G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::share
 }
 
 G_CFLOBDDNodeHandle MkParity(unsigned int level, std::shared_ptr<GrammarNode>& grammar) {
-    if (grammar->level == 0) {
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         return G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkParity_BDD(grammar->numVars);
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);

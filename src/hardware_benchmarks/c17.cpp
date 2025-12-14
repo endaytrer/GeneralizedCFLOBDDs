@@ -13,13 +13,13 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c17() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    std::vector<std::string> productions = {
-        "S 4 -> S 0 S 3",
-        "S 3 -> S 0 S 2",
-        "S 2 -> S 0 S 1",
-        "S 1 -> S 0 S 0",
-        "S 0 -> a"
-    };
+    // std::vector<std::string> productions = {
+    //     "S 4 -> S 0 S 3",
+    //     "S 3 -> S 0 S 2",
+    //     "S 2 -> S 0 S 1",
+    //     "S 1 -> S 0 S 0",
+    //     "S 0 -> a"
+    // };
     // std::vector<std::string> productions = {
     //     "S 1 -> S 0 S 0 S 0 S 0 S 0",
     //     "S 0 -> a"
@@ -30,7 +30,10 @@ void HardwareBenchmarks::c17() {
     //     "S 1 -> S 0 S 0", // 2
     //     "S 0 -> a"
     // };
-    grammar->constructGrammar(productions, "S 4");
+    std::vector<std::string> productions = {
+        "S 0 -> BDD(5)"
+    }; 
+    grammar->constructGrammar(productions, "S 0");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -54,25 +57,29 @@ void HardwareBenchmarks::c17() {
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start);
 
+    gat22.PrintYield();
+    std::cout << "-----------------" << std::endl;
+    gat23.PrintYield();
+
     // gat1.print(std::cout);
 
-    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>(HASH_NUM_BUCKETS);
-    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>(HASH_NUM_BUCKETS);
-    // std::vector<G_CFLOBDD> gates = {gat22, gat23};
-    unsigned int totalNodeCount = 0, totalEdgeCount = 0;
-    unsigned int nodeCount = 0, edgeCount = 0;
-    gat22.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
-        visitedNodesDuringGroupCountNodesAndEdges,
-        visitedEdgesDuringGroupCountNodesAndEdges);
-    gat23.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
-        visitedNodesDuringGroupCountNodesAndEdges,
-        visitedEdgesDuringGroupCountNodesAndEdges);
+    // Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>(HASH_NUM_BUCKETS);
+    // Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>(HASH_NUM_BUCKETS);
+    // // std::vector<G_CFLOBDD> gates = {gat22, gat23};
+    // unsigned int totalNodeCount = 0, totalEdgeCount = 0;
+    // unsigned int nodeCount = 0, edgeCount = 0;
+    // gat22.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
+    //     visitedNodesDuringGroupCountNodesAndEdges,
+    //     visitedEdgesDuringGroupCountNodesAndEdges);
+    // gat23.GroupCountNodesAndEdges(totalNodeCount, totalEdgeCount,
+    //     visitedNodesDuringGroupCountNodesAndEdges,
+    //     visitedEdgesDuringGroupCountNodesAndEdges);
 
-    // delete visitedEdgesDuringGroupCountNodesAndEdges;
+    // // delete visitedEdgesDuringGroupCountNodesAndEdges;
 
-    cout << "c17 G_CFLOBDD created in " << duration.count() << " milliseconds." << endl;
-    cout << "Total Node Count: " << totalNodeCount << ", Total Edge Count: " << totalEdgeCount << endl;
-    cout << "Total Size (Nodes + Edges): " << totalNodeCount + totalEdgeCount << endl;
+    // cout << "c17 G_CFLOBDD created in " << duration.count() << " milliseconds." << endl;
+    // cout << "Total Node Count: " << totalNodeCount << ", Total Edge Count: " << totalEdgeCount << endl;
+    // cout << "Total Size (Nodes + Edges): " << totalNodeCount + totalEdgeCount << endl;
 
     // nodeCount = 0; edgeCount = 0;
     // gat1.CountNodesAndEdges(nodeCount, edgeCount);

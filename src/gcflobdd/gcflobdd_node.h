@@ -191,7 +191,7 @@ namespace G_CFL_OBDD {
 
 namespace G_CFL_OBDD {
 
-enum G_CFLOBDD_NODEKIND { G_CFLOBDD_INTERNAL, G_CFLOBDD_FORK, G_CFLOBDD_DONTCARE };
+enum G_CFLOBDD_NODEKIND { G_CFLOBDD_INTERNAL, G_CFLOBDD_FORK, G_CFLOBDD_DONTCARE, G_CFLOBDD_BDD };
 
 class G_CFLOBDDNode {
  public:
@@ -220,7 +220,7 @@ class G_CFLOBDDNode {
   virtual void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount) = 0;
   virtual void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes) = 0;
-  virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
+  virtual void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const = 0;
   const unsigned int level;
   std::shared_ptr<GrammarNode> grammar;
   unsigned int cachedHash_997 = 0;
@@ -260,7 +260,7 @@ class G_CFLOBDDInternalNode : public G_CFLOBDDNode {
   void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
   void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
-  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
+  void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const;
 
   unsigned int numLayers;
   ConnectionList *connections; // layers 1 ... numLayers
@@ -294,7 +294,7 @@ class G_CFLOBDDLeafNode : public G_CFLOBDDNode {
   void CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* visitedNodes, Hashset<G_CFLOBDDReturnMapBody>* visitedEdges,
 	  unsigned int& nodeCount, unsigned int& edgeCount);
   void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
-  virtual void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const = 0;
+  virtual void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const = 0;
 };
 
 //********************************************************************
@@ -313,7 +313,7 @@ class G_CFLOBDDForkNode : public G_CFLOBDDLeafNode {
 
  public:
 	std::ostream& print(std::ostream & out = std::cout) const;
-  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
+  void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const;
 
  private:
   G_CFLOBDDForkNode(const G_CFLOBDDForkNode &n);   // Copy constructor (hidden)
@@ -336,7 +336,7 @@ class G_CFLOBDDDontCareNode : public G_CFLOBDDLeafNode {
 
  public:
 	std::ostream& print(std::ostream & out = std::cout) const;
-  void PrintYield(std::vector<std::vector<std::string>>& yield_strings) const;
+  void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const;
 
  private:
   G_CFLOBDDDontCareNode(const G_CFLOBDDDontCareNode &n);   // Copy constructor (hidden)

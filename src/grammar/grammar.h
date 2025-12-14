@@ -35,7 +35,8 @@ public:
     // Construct the grammar from a list of production rules and a start symbol
     // Eg: S 5 -> S 4 S 4
     // Eg: S 5 -> S 1 S 4
-    // Eg: S 1 -> a (only one terminal symbol allowed)
+    // Eg: S 0 -> a (only one terminal symbol allowed)
+    // Eg: S 0 -> BDD(10) (a BDD terminal with 10 variables)
     void constructGrammar(std::vector<std::string> &productions, const std::string &startSymbol);
     void InstallNumVars();
     void updateLevel();
@@ -52,6 +53,7 @@ public:
     virtual ~GrammarNode(); // Destructor
     unsigned int level; // Level of the node in the grammar tree
     virtual bool isTerminal() const = 0; // Check if the node is terminal
+    virtual bool isBDDGrammar() const = 0; // Check if the node is part of a BDD grammar
 
     virtual bool operator!= (const GrammarNode & n) const = 0;  // Overloaded !=
     virtual bool operator== (const GrammarNode & n) const = 0;  // Overloaded ==
@@ -71,6 +73,7 @@ public:
     std::string productionRule; // Production rule applied at this non-terminal node
     std::vector<std::shared_ptr<GrammarNode>> children; // Children of the non-terminal node
     bool isTerminal() const { return false; }
+    bool isBDDGrammar() const;
     void addChild(const std::shared_ptr<GrammarNode> &child); // Add a child node
     void setProductionRule(const std::string &rule); // Set the production rule
     bool operator!= (const GrammarNode & n) const;  // Overloaded !=
@@ -86,6 +89,7 @@ public:
     GrammarTerminalNode();  // Constructor
     ~GrammarTerminalNode(); // Destructor
     bool isTerminal() const { return true; }
+    bool isBDDGrammar() const { return numVars > 1; }
     bool operator!= (const GrammarNode & n) const;  // Overloaded !=
     bool operator== (const GrammarNode & n) const;  // Overloaded ==
     GrammarTerminalNode& operator= (const GrammarTerminalNode &other); // Overloaded assignment

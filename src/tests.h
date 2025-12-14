@@ -21,6 +21,9 @@ public:
     static void testSynFun6();
     static void testSynFun7();
     static void testSynFun8();
+    static void testSynFun9();
+    static void testSynFun10();
+    static void testSynFun11();
     static void testC17();
     static void testC432(unsigned int grammarChoice);
     static void testC880(unsigned int grammarChoice);
@@ -30,6 +33,7 @@ public:
     static void testC6288_12();
     static void testC6288_16(unsigned int grammarChoice);
     static void testNQueens(unsigned int n, unsigned int grammarChoice);
+    static void testBDDGrammar();
 };
 
 #endif // TESTS_H

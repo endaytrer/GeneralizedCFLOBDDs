@@ -69,6 +69,15 @@ void Grammar::constructGrammar(std::vector<std::string> &productions, const std:
         if (lastToken.size() == 1 && islower(lastToken[0])) {
             // Terminal production
             nonTerminalMap[lhs]->addChild(Grammar::terminalNode);
+        } else if (lastToken.find("BDD(") == 0 && lastToken.back() == ')') {
+            // BDD terminal production
+            size_t startPos = lastToken.find('(') + 1;
+            size_t endPos = lastToken.find(')');
+            std::string varCountStr = lastToken.substr(startPos, endPos - startPos);
+            unsigned int varCount = std::stoul(varCountStr);
+            std::shared_ptr<GrammarTerminalNode> bddTerminalNode = std::make_shared<GrammarTerminalNode>();
+            bddTerminalNode->numVars = varCount;
+            nonTerminalMap[lhs]->addChild(bddTerminalNode);
         }
         else {
             // Non-terminal production
@@ -226,6 +235,15 @@ void GrammarNonTerminalNode::InstallNumVars(std::unordered_set<GrammarNode*, Gra
     }
 }
 
+bool GrammarNonTerminalNode::isBDDGrammar() const {
+    for (const auto& child : children) {
+        if (child->isBDDGrammar()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /************* GrammarTerminalNode Implementation *************/
 GrammarTerminalNode::GrammarTerminalNode() : GrammarNode() {
     // Constructor implementation (if needed)
@@ -262,7 +280,12 @@ void GrammarTerminalNode::InstallNumVars(std::unordered_set<GrammarNode*, Gramma
         return; // Already visited
     }
     visited.insert(this);
-    numVars = 1; // Terminal nodes contribute one variable
+    if (!isBDDGrammar()) {
+        numVars = 1; // Regular terminal nodes contribute one variable
+        return;
+    }
+    // For BDD terminal nodes, numVars is already set during construction
+    // So we do not change it here
 }
 
 void GrammarTerminalNode::updateLevel() {

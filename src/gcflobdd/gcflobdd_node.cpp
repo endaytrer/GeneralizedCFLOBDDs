@@ -599,7 +599,7 @@ void G_CFLOBDDInternalNode::CountPaths(Hashset<G_CFLOBDDNodeHandle> *visitedNode
 	}
 }
 
-void G_CFLOBDDInternalNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+void G_CFLOBDDInternalNode::PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const
 {
   for (unsigned int layer = 0; layer < numLayers; layer++) {
     for (unsigned int i = 0; i < connections[layer].Size(); i++)
@@ -716,9 +716,10 @@ bool G_CFLOBDDForkNode::operator== (const G_CFLOBDDNode & n) const
   return n.NodeKind() == G_CFLOBDD_FORK;
 }
 
-void G_CFLOBDDForkNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+void G_CFLOBDDForkNode::PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const
 {
-    yield_strings.push_back({"0", "1"});
+  yield_strings.insert({0, {"0"}});
+  yield_strings.insert({1, {"1"}});
 }
 
 //********************************************************************
@@ -772,7 +773,7 @@ bool G_CFLOBDDDontCareNode::operator== (const G_CFLOBDDNode & n) const
   return n.NodeKind() == G_CFLOBDD_DONTCARE;
 }
 
-void G_CFLOBDDDontCareNode::PrintYield(std::vector<std::vector<std::string>>& yield_strings) const
+void G_CFLOBDDDontCareNode::PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const
 {
-    yield_strings.push_back({"*"});
+  yield_strings.insert({0, {"*"}});
 }
