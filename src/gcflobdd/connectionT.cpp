@@ -35,6 +35,9 @@ ConnectionT<Handle>::ConnectionT(G_CFLOBDDNode *entryPoint, Handle &returnMapHan
 template <typename Handle>
 ConnectionT<Handle>::ConnectionT(const ConnectionT<Handle> &C)
 {
+	if (entryPointHandle != NULL) {
+		delete entryPointHandle;
+	}
 	entryPointHandle = new G_CFLOBDDNodeHandle(*(C.entryPointHandle));
 	returnMapHandle = C.returnMapHandle;
 }
@@ -62,6 +65,9 @@ ConnectionT<Handle>& ConnectionT<Handle>::operator= (const ConnectionT<Handle>& 
 {
 	if (this != &C)      // don't assign to self!
 	{
+		if (entryPointHandle != NULL) {
+			delete entryPointHandle;
+		}
 		entryPointHandle = new G_CFLOBDDNodeHandle(*(C.entryPointHandle));
 		returnMapHandle = C.returnMapHandle;
 	}

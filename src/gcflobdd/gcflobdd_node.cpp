@@ -21,6 +21,7 @@
 #include "../utils/hash.h"
 #include "../utils/hashset.h"
 #include "../ops/gcflobdd_node_ops.h"
+#include "../utils/pair_T.h"
 
 using namespace G_CFL_OBDD;
 
@@ -417,15 +418,16 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
       ConnectionList& currentConnections = connections[layer];
       ReductionMapHandle nextRedMapHandle (currentConnections.Size());
       unsigned int currPosition = 0;
-      std::unordered_map<Connection, unsigned int, Connection::ConnectionHash, Connection::ConnectionEqual> connMap;
+      // std::unordered_map<Connection, unsigned int, Connection::ConnectionHash, Connection::ConnectionEqual> connMap (currentConnections.Size());
+      std::unordered_map<Pair_T<G_CFLOBDDNodeHandle, G_CFLOBDDReturnMapHandle>, unsigned int, Pair_T<G_CFLOBDDNodeHandle, G_CFLOBDDReturnMapHandle>::pair_hash, Pair_T<G_CFLOBDDNodeHandle, G_CFLOBDDReturnMapHandle>::pair_equal> connMap (currentConnections.Size());
       ConnectionList tempConnections(currentConnections.Size());
       for (unsigned int i = 0; i < currentConnections.Size(); i++) {
-          auto conn = currentConnections[i];
+          auto& conn = currentConnections[i];
           ReductionMapHandle inducedRedMapHandle;
           G_CFLOBDDReturnMapHandle inducedReturnMap = ComposeAndReduce(conn.returnMapHandle, currentRedMapHandle, inducedRedMapHandle);
           G_CFLOBDDNodeHandle reducedNodeHandle = conn.entryPointHandle->Reduce(inducedRedMapHandle, inducedReturnMap.Size(), forceReduce);
-          Connection newConn(reducedNodeHandle, inducedReturnMap);
-          auto it = connMap.find(newConn);
+          Pair_T<G_CFLOBDDNodeHandle, G_CFLOBDDReturnMapHandle> newConnPair(reducedNodeHandle, inducedReturnMap);
+          auto it = connMap.find(newConnPair);
           // auto currPositionInNextMap = n->connections[layer].LookupInv(newConn);
           // if (currPositionInNextMap != -1) {
           if (it != connMap.end()) {
@@ -434,17 +436,20 @@ G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHand
           }
           else {
             // n->connections[layer].AddConnection(newConn);
+            Connection newConn(reducedNodeHandle, inducedReturnMap);
             tempConnections.AddConnection(newConn);
             nextRedMapHandle.AddToEnd(currPosition);
             currPosition++;
-            connMap.insert(std::make_pair(newConn, currPosition - 1));
+            connMap.insert(std::make_pair(newConnPair, currPosition - 1));
           } 
       }
       n->connections[layer].Reserve(tempConnections.Size());
       for (int i = 0; i < tempConnections.Size(); i++) {
           n->connections[layer].AddConnection(tempConnections[i]);
       }
+      // std::cout << "Num elements: " << connMap.size() << " " << "load factor: " << connMap.load_factor() << " bucket count: " << connMap.bucket_count() << std::endl;
       // No need to delete tempConnections as it's not dynamically allocated
+      nextRedMapHandle.Canonicalize();
       currentRedMapHandle = nextRedMapHandle;
       // n->connections[layer].Canonicalize();
   }
@@ -538,7 +543,7 @@ void G_CFLOBDDInternalNode::CountNodesAndEdges(Hashset<G_CFLOBDDNodeHandle>* vis
     for (unsigned int layer = 0; layer < numLayers; layer++) {
       for (unsigned int i = 0; i < connections[layer].Size(); i++)
       {
-        Connection conn = connections[layer][i];
+        Connection& conn = connections[layer][i];
         conn.entryPointHandle->handleContents->CountNodesAndEdges(visitedNodes, visitedEdges, nodeCount, edgeCount);
         if (visitedEdges->Lookup(conn.returnMapHandle.mapContents) == NULL) {
           visitedEdges->Insert(conn.returnMapHandle.mapContents);
@@ -591,7 +596,7 @@ void G_CFLOBDDInternalNode::CountPaths(Hashset<G_CFLOBDDNodeHandle> *visitedNode
     for (unsigned int layer = 0; layer < numLayers; layer++) {
       for (unsigned int i = 0; i < connections[layer].Size(); i++)
       {
-          Connection conn = connections[layer][i];
+          Connection& conn = connections[layer][i];
           conn.entryPointHandle->handleContents->CountPaths(visitedNodes);
       }
     }
@@ -604,7 +609,7 @@ void G_CFLOBDDInternalNode::PrintYield(std::unordered_map<int, std::vector<std::
   for (unsigned int layer = 0; layer < numLayers; layer++) {
     for (unsigned int i = 0; i < connections[layer].Size(); i++)
     {
-        Connection conn = connections[layer][i];
+        Connection& conn = connections[layer][i];
         conn.entryPointHandle->handleContents->PrintYield(yield_strings);
     }
   }

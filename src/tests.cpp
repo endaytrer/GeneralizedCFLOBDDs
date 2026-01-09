@@ -852,8 +852,8 @@ void Tests::testSynFun8() {
         // Define the grammar productions here
         // "S 20 -> S 19 S 19", // 1048576
         // "S 19 -> S 18 S 18", // 524288
-        // "S 18 -> S 17 S 17", // 262144
-        // "S 17 -> S 16 S 16", // 131072
+        "S 18 -> S 17 S 17", // 262144
+        "S 17 -> S 16 S 16", // 131072
         "S 16 -> S 15 S 15", // 65536
         "S 15 -> S 14 S 14", // 32768
         "S 14 -> S 13 S 13", // 16384
@@ -881,7 +881,8 @@ void Tests::testSynFun8() {
     //     // "S 14 -> S 13 S 13", // 16384
     //     // "S 13 -> S 0 S 12", // 8192
     //     // "S 12 -> S 11 S 11 S 11", // 4096
-    //     "S 11 -> S 0 S 10", // 2048
+    //     "S 12 -> S 0 S 11",
+    //     "S 11 -> S 10 S 10 S 10", // 2048
     //     "S 10 -> S 9 S 9 S 9", // 1024
     //     "S 9 -> S 8 S 8 S 8", // 512
     //     "S 8 -> S 7 S 7 S 7", // 256
@@ -896,12 +897,12 @@ void Tests::testSynFun8() {
     // };
 
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    grammar->constructGrammar(productions, "S 16");
+    grammar->constructGrammar(productions, "S 18");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
-	unsigned int numVars = pow(3, 10) + 1; // 59049 + 1
+	unsigned int numVars = pow(3, 11) + 1; // 59049 + 1
 	unsigned int level = grammar->root->level;
 	std::vector<G_CFLOBDD> vars;
 	for (unsigned int i = 0; i < numVars; i++) {
@@ -972,49 +973,49 @@ G_CFLOBDD computeSyn9Function(const std::vector<G_CFLOBDD>& vars, int startIndex
 }
 
 void Tests::testSynFun9() {
-    // std::vector<std::string> productions = {
-    //     // Define the grammar productions here
-    //     // "S 20 -> S 19 S 19", // 1048576
-    //     "S 19 -> S 18 S 18", // 524288
-    //     "S 18 -> S 17 S 17", // 262144
-    //     "S 17 -> S 16 S 16", // 131072
-    //     "S 16 -> S 15 S 15", // 65536
-    //     "S 15 -> S 14 S 14", // 32768
-    //     "S 14 -> S 13 S 13", // 16384
-    //     "S 13 -> S 12 S 12", // 8192
-    //     "S 12 -> S 11 S 11", // 4096
-    //     "S 11 -> S 10 S 10", // 2048
-    //     "S 10 -> S 9 S 9", // 1024
-    //     "S 9 -> S 8 S 8", // 512
-    //     "S 8 -> S 7 S 7", // 256
-    //     "S 7 -> S 6 S 6", // 128
-    //     "S 6 -> S 5 S 5", // 64
-    //     "S 5 -> S 4 S 4", // 32
-    //     "S 4 -> S 3 S 3", // 16
-    //     "S 3 -> S 2 S 2", // 8
-    //     "S 2 -> S 1 S 1", // 4
-    //     "S 1 -> S 0 S 0", // 2
-    //     "S 0 -> a"
-    // };
-
     std::vector<std::string> productions = {
-        "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
-        "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 2310 * 13 = 30030
-        "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 210 * 11 = 2310
-        "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 30 * 7 = 210
-        "S 3 -> S 2 S 2 S 2 S 2 S 2", // 6 * 5 = 30
-        "S 2 -> S 1 S 1 S 1", // 2 * 3 = 6
+        // Define the grammar productions here
+        // "S 20 -> S 19 S 19", // 1048576
+        // "S 19 -> S 18 S 18", // 524288
+        // "S 18 -> S 17 S 17", // 262144
+        // "S 17 -> S 16 S 16", // 131072
+        // "S 16 -> S 15 S 15", // 65536
+        // "S 15 -> S 14 S 14", // 32768
+        // "S 14 -> S 13 S 13", // 16384
+        // "S 13 -> S 12 S 12", // 8192
+        "S 12 -> S 11 S 11", // 4096
+        "S 11 -> S 10 S 10", // 2048
+        "S 10 -> S 9 S 9", // 1024
+        "S 9 -> S 8 S 8", // 512
+        "S 8 -> S 7 S 7", // 256
+        "S 7 -> S 6 S 6", // 128
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
         "S 1 -> S 0 S 0", // 2
         "S 0 -> a"
     };
 
+    // std::vector<std::string> productions = {
+    //     // "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
+    //     // "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 2310 * 13 = 30030
+    //     "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 210 * 11 = 2310
+    //     "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 30 * 7 = 210
+    //     "S 3 -> S 2 S 2 S 2 S 2 S 2", // 6 * 5 = 30
+    //     "S 2 -> S 1 S 1 S 1", // 2 * 3 = 6
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a"
+    // };
+
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    grammar->constructGrammar(productions, "S 7");
+    grammar->constructGrammar(productions, "S 12");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
-	unsigned int numVars = 510510; // 59049 + 1
+	unsigned int numVars = 2310; // 59049 + 1
 	unsigned int level = grammar->root->level;
 	std::vector<G_CFLOBDD> vars;
 	for (unsigned int i = 0; i < numVars; i++) {
@@ -1024,7 +1025,7 @@ void Tests::testSynFun9() {
 		vars.push_back(MkProjection(i, level, grammar));
 	}
     
-    std::vector<int> groupIndices = {2, 3, 5, 7, 11, 13, 17};
+    std::vector<int> groupIndices = {2, 3, 5, 7, 11};
     
     std::vector<G_CFLOBDD> groupFunctions = vars;
     for (unsigned int i = 0; i < groupIndices.size(); i++) {
@@ -1053,49 +1054,49 @@ void Tests::testSynFun9() {
 }
 
 void Tests::testSynFun10() {
-    // std::vector<std::string> productions = {
-    //     // Define the grammar productions here
-    //     // "S 20 -> S 19 S 19", // 1048576
-    //     // "S 19 -> S 18 S 18", // 524288
-    //     "S 18 -> S 17 S 17", // 262144
-    //     "S 17 -> S 16 S 16", // 131072
-    //     "S 16 -> S 15 S 15", // 65536
-    //     "S 15 -> S 14 S 14", // 32768
-    //     "S 14 -> S 13 S 13", // 16384
-    //     "S 13 -> S 12 S 12", // 8192
-    //     "S 12 -> S 11 S 11", // 4096
-    //     "S 11 -> S 10 S 10", // 2048
-    //     "S 10 -> S 9 S 9", // 1024
-    //     "S 9 -> S 8 S 8", // 512
-    //     "S 8 -> S 7 S 7", // 256
-    //     "S 7 -> S 6 S 6", // 128
-    //     "S 6 -> S 5 S 5", // 64
-    //     "S 5 -> S 4 S 4", // 32
-    //     "S 4 -> S 3 S 3", // 16
-    //     "S 3 -> S 2 S 2", // 8
-    //     "S 2 -> S 1 S 1", // 4
-    //     "S 1 -> S 0 S 0", // 2
-    //     "S 0 -> a"
-    // };
-
     std::vector<std::string> productions = {
-        // "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
-        "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 10395 * 13 = 135135
-        "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 945 * 11 = 10395
-        "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 105 * 9 = 945
-        "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2 S 2", // 15 * 7 = 105
-        "S 2 -> S 1 S 1 S 1 S 1 S 1", // 3 * 5 = 15
-        "S 1 -> S 0 S 0 S 0", // 3
+        // Define the grammar productions here
+        // "S 20 -> S 19 S 19", // 1048576
+        // "S 19 -> S 18 S 18", // 524288
+        // "S 18 -> S 17 S 17", // 262144
+        // "S 17 -> S 16 S 16", // 131072
+        // "S 16 -> S 15 S 15", // 65536
+        // "S 15 -> S 14 S 14", // 32768
+        // "S 14 -> S 13 S 13", // 16384
+        // "S 13 -> S 12 S 12", // 8192
+        // "S 12 -> S 11 S 11", // 4096
+        // "S 11 -> S 10 S 10", // 2048
+        "S 10 -> S 9 S 9", // 1024
+        "S 9 -> S 8 S 8", // 512
+        "S 8 -> S 7 S 7", // 256
+        "S 7 -> S 6 S 6", // 128
+        "S 6 -> S 5 S 5", // 64
+        "S 5 -> S 4 S 4", // 32
+        "S 4 -> S 3 S 3", // 16
+        "S 3 -> S 2 S 2", // 8
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
         "S 0 -> a"
     };
 
+    // std::vector<std::string> productions = {
+    //     // "S 7 -> S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6 S 6", // 30030 * 17 = 510510
+    //     // "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 10395 * 13 = 135135
+    //     // "S 5 -> S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4 S 4", // 945 * 11 = 10395
+    //     "S 4 -> S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3 S 3", // 105 * 9 = 945
+    //     "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2 S 2", // 15 * 7 = 105
+    //     "S 2 -> S 1 S 1 S 1 S 1 S 1", // 3 * 5 = 15
+    //     "S 1 -> S 0 S 0 S 0", // 3
+    //     "S 0 -> a"
+    // };
+
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    grammar->constructGrammar(productions, "S 6");
+    grammar->constructGrammar(productions, "S 10");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
-	unsigned int numVars = 135135; // 59049 + 1
+	unsigned int numVars = 945; // 59049 + 1
 	unsigned int level = grammar->root->level;
 	std::vector<G_CFLOBDD> vars;
 	for (unsigned int i = 0; i < numVars; i++) {
@@ -1105,7 +1106,7 @@ void Tests::testSynFun10() {
 		vars.push_back(MkProjection(i, level, grammar));
 	}
     
-    std::vector<int> groupIndices = {3, 5, 7, 9, 11, 13};
+    std::vector<int> groupIndices = {3, 5, 7, 9};
     
     std::vector<G_CFLOBDD> groupFunctions = vars;
     for (unsigned int i = 0; i < groupIndices.size(); i++) {
@@ -1132,48 +1133,50 @@ void Tests::testSynFun10() {
 }
 
 void Tests::testSynFun11() {
-    std::vector<std::string> productions = {
-        // Define the grammar productions here
-        // "S 20 -> S 19 S 19", // 1048576
-        // "S 19 -> S 18 S 18", // 524288
-        // "S 18 -> S 17 S 17", // 262144
-        // "S 17 -> S 16 S 16", // 131072
-        // "S 16 -> S 15 S 15", // 65536
-        // "S 15 -> S 14 S 14", // 32768
-        "S 14 -> S 13 S 13", // 16384
-        "S 13 -> S 12 S 12", // 8192
-        "S 12 -> S 11 S 11", // 4096
-        "S 11 -> S 10 S 10", // 2048
-        "S 10 -> S 9 S 9", // 1024
-        "S 9 -> S 8 S 8", // 512
-        "S 8 -> S 7 S 7", // 256
-        "S 7 -> S 6 S 6", // 128
-        "S 6 -> S 5 S 5", // 64
-        "S 5 -> S 4 S 4", // 32
-        "S 4 -> S 3 S 3", // 16
-        "S 3 -> S 2 S 2", // 8
-        "S 2 -> S 1 S 1", // 4
-        "S 1 -> S 0 S 0", // 2
-        "S 0 -> a"
-    };
-
     // std::vector<std::string> productions = {
-    //     "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 720 * 15 = 10800
-    //     "S 5 -> S 4 S 4 S 4", // 240 * 3 = 720
-    //     "S 4 -> S 3 S 3 S 3 S 3", // 60 * 4 = 240
-    //     "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2", // 10 * 6 = 60
-    //     "S 2 -> S 1 S 1", // 5 * 2 = 10
-    //     "S 1 -> S 0 S 0 S 0 S 0 S 0", // 5
+    //     // Define the grammar productions here
+    //     // "S 20 -> S 19 S 19", // 1048576
+    //     // "S 19 -> S 18 S 18", // 524288
+    //     "S 18 -> S 17 S 17", // 262144
+    //     "S 17 -> S 16 S 16", // 131072
+    //     "S 16 -> S 15 S 15", // 65536
+    //     "S 15 -> S 14 S 14", // 32768
+    //     "S 14 -> S 13 S 13", // 16384
+    //     "S 13 -> S 12 S 12", // 8192
+    //     "S 12 -> S 11 S 11", // 4096
+    //     "S 11 -> S 10 S 10", // 2048
+    //     "S 10 -> S 9 S 9", // 1024
+    //     "S 9 -> S 8 S 8", // 512
+    //     "S 8 -> S 7 S 7", // 256
+    //     "S 7 -> S 6 S 6", // 128
+    //     "S 6 -> S 5 S 5", // 64
+    //     "S 5 -> S 4 S 4", // 32
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
     //     "S 0 -> a"
     // };
 
+    std::vector<std::string> productions = {
+        "S 8 -> S 7 S 7 S 7 S 7 S 7 S 7", // 32400 * 6 = 194400
+        "S 7 -> S 6 S 6 S 6", // 10800 * 3 = 32400
+        "S 6 -> S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5 S 5", // 720 * 15 = 10800
+        "S 5 -> S 4 S 4 S 4", // 240 * 3 = 720
+        "S 4 -> S 3 S 3 S 3 S 3", // 60 * 4 = 240
+        "S 3 -> S 2 S 2 S 2 S 2 S 2 S 2", // 10 * 6 = 60
+        "S 2 -> S 1 S 1", // 5 * 2 = 10
+        "S 1 -> S 0 S 0 S 0 S 0 S 0", // 5
+        "S 0 -> a"
+    };
+
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    grammar->constructGrammar(productions, "S 14");
+    grammar->constructGrammar(productions, "S 8");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
-	unsigned int numVars = 10800; // 59049 + 1
+	unsigned int numVars = 194400; // 59049 + 1
 	unsigned int level = grammar->root->level;
 	std::vector<G_CFLOBDD> vars;
 	for (unsigned int i = 0; i < numVars; i++) {
@@ -1183,7 +1186,7 @@ void Tests::testSynFun11() {
 		vars.push_back(MkProjection(i, level, grammar));
 	}
     
-    std::vector<int> groupIndices = {5, 2, 6, 4, 3, 15};
+    std::vector<int> groupIndices = {5, 2, 6, 4, 3, 15, 3, 6};
     
     std::vector<G_CFLOBDD> groupFunctions = vars;
     for (unsigned int i = 0; i < groupIndices.size(); i++) {

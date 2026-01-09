@@ -290,24 +290,28 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDInternalNode* n1,
       // Fill in n->AConnection.returnMapHandle
       // Correctness relies on LayerMapHandle having no duplicates
       G_CFLOBDDReturnMapHandle aReturnHandle (LayerMapHandle.Size());
+      std::vector<intpair> layerMapHandlePairs (LayerMapHandle.Size(), intpair(0,0));
       for (unsigned int k = 0; k < LayerMapHandle.Size(); k++) {
         aReturnHandle.AddToEnd(k);
+        layerMapHandlePairs[k] = LayerMapHandle[k];
       }
       aReturnHandle.Canonicalize();
       auto layer_0_connection = Connection(aHandle, aReturnHandle);
       n->connections[0].Reserve(1);
       n->connections[0].AddConnection(layer_0_connection);
-      // n->connections[0].Canonicalize();
+
 
       for (unsigned int layer = 1; layer < n->numLayers; layer++) {
         // iterate over LayerMapHandle to get the pairs of BConnections
-        PairProductMapHandle newLayerMapHandle;
-        // std::unordered_map<intpair, int, intpair::intpair_hash, intpair::intpair_equal> tempMap;
+        std::vector<intpair> newLayerMapHandlePairs;
         std::vector<int> tempVector (n1->numExits * n2->numExits, -1);
-        n->connections[layer].Reserve(LayerMapHandle.Size());
-        for (auto& it : LayerMapHandle.mapContents->mapArray) {
-          Connection n1_connection = n1->connections[layer][it.First()];
-          Connection n2_connection = n2->connections[layer][it.Second()];
+        n->connections[layer].Reserve(layerMapHandlePairs.size());
+        
+        for (auto& it : layerMapHandlePairs) {
+          const Connection& n1_connection = n1->connections[layer][it.First()];
+          const Connection& n2_connection = n2->connections[layer][it.Second()];
+
+          // std::cout << "Layer " << layer << " processing connection pair (" << it.First() << ", " << it.Second() << ")\n";
 
           PairProductMapHandle tempMapHandle;
           G_CFLOBDDNodeHandle n_handle = PairProduct(*(n1_connection.entryPointHandle),
@@ -320,36 +324,34 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDInternalNode* n1,
               auto second = tempMapHandle[k].Second();
               auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
               auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
-              // auto pair_index = intpair(adjusted_first, adjusted_second);
               auto index = adjusted_first * n2->numExits + adjusted_second;
-              // auto pi_it = tempMap.find(pair_index);
-              // if (pi_it == tempMap.end()) {
               if (tempVector[index] == -1) {
                 // Not found
                 auto pair_index = intpair(adjusted_first, adjusted_second);
-                newLayerMapHandle.AddToEnd(pair_index);
-                n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
-                // tempMap[pair_index] = newLayerMapHandle.Size() - 1;
-                tempVector[index] = newLayerMapHandle.Size() - 1;
+                newLayerMapHandlePairs.push_back(pair_index);
+                n_returnHandle.AddToEnd(newLayerMapHandlePairs.size() - 1);
+                tempVector[index] = newLayerMapHandlePairs.size() - 1;
               }
               else {
                 // Found
-                // n_returnHandle.AddToEnd(pi_it->second);
                 n_returnHandle.AddToEnd(tempVector[index]);
               }
           }
+          
           n_returnHandle.Canonicalize();
-          auto new_connection = Connection(n_handle, n_returnHandle);
+          Connection new_connection(n_handle, n_returnHandle);
           n->connections[layer].AddConnection(new_connection);
         }
-        // n->connections[layer].Canonicalize();
-        newLayerMapHandle.Canonicalize();
-        LayerMapHandle = newLayerMapHandle;
+        layerMapHandlePairs = newLayerMapHandlePairs;
       }
-      n->numExits = LayerMapHandle.Size();
+
+      n->numExits = layerMapHandlePairs.size();
       n->grammar = n1->grammar; // = n2->grammar
-      LayerMapHandle.Canonicalize();
-      pairProductMapHandle = LayerMapHandle;
+      for (int i = 0; i < (int)layerMapHandlePairs.size(); i++) {
+        pairProductMapHandle.AddToEnd(layerMapHandlePairs[i]);
+      }
+      // pairProductMapHandle = LayerMapHandle;
+      pairProductMapHandle.Canonicalize();
 #ifdef PATH_COUNTING_ENABLED
       n->InstallPathCounts();
 #endif
@@ -365,8 +367,8 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
 {
   PairProductMemo<G_CFLOBDDNodeHandle> cachedPairProductMemo;
 
-  auto key1 = PairProductKey(n1, n2);
-  auto key2 = PairProductKey(n2, n1);
+  auto key1 = PairProductKey<G_CFLOBDDNodeHandle>(n1, n2);
+  auto key2 = PairProductKey<G_CFLOBDDNodeHandle>(n2, n1);
 
   // bool isCached = pairProductCache.find(key1) != pairProductCache.end();
   bool isCached = pairProductCache->Fetch(key1, cachedPairProductMemo);
@@ -440,7 +442,7 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
     // std::cout << "Output node:\n";
     // answer.print(std::cout);
     // std::cout << "\n";
-    auto memo = PairProductMemo(answer, pairProductMapHandle);
+    auto memo = PairProductMemo<G_CFLOBDDNodeHandle>(answer, pairProductMapHandle);
     pairProductCache->Insert(key1, memo);
     return answer;
   }

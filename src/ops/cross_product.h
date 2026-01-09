@@ -23,6 +23,7 @@ namespace G_CFL_OBDD {
 class PairProductMapHandle {
  public:
   PairProductMapHandle();                               // Default constructor
+  PairProductMapHandle(unsigned int capacity);        // Constructor with capacity
   ~PairProductMapHandle();                              // Destructor
   PairProductMapHandle(const PairProductMapHandle &r);             // Copy constructor
   PairProductMapHandle& operator= (const PairProductMapHandle &r); // Overloaded assignment
