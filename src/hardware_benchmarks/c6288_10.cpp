@@ -10,32 +10,182 @@ using namespace std;
 using namespace HardwareBenchmarks;
 using namespace std::chrono;
 
-void HardwareBenchmarks::c6288_10() {
+namespace c6288_10_helpers {
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar0Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 5 -> S 4 S 4", // 32
+            "S 4 -> S 3 S 3", // 16
+            "S 3 -> S 2 S 2", // 8
+            "S 2 -> S 1 S 1" , // 4
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a", // 1
+        }, "S 5", 5);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar1Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 19 -> S 0 S 18", // 20
+            "S 18 -> S 0 S 17", // 19
+            "S 17 -> S 0 S 16", // 18
+            "S 16 -> S 0 S 15", // 17
+            "S 15 -> S 0 S 14", // 16
+            "S 14 -> S 0 S 13", // 15
+            "S 13 -> S 0 S 12", // 14
+            "S 12 -> S 0 S 11", // 13
+            "S 11 -> S 0 S 10", // 12
+            "S 10 -> S 0 S 9", // 11
+            "S 9 -> S 0 S 8", // 10
+            "S 8 -> S 0 S 7", // 9
+            "S 7 -> S 0 S 6", // 8
+            "S 6 -> S 0 S 5", // 7
+            "S 5 -> S 0 S 4", // 6
+            "S 4 -> S 0 S 3", // 5
+            "S 3 -> S 0 S 2", // 4
+            "S 2 -> S 0 S 1", // 3
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a" // 1
+        }, "S 19", 19);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar2Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 5 S 2", // 20 6
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar3Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 5 S 2", // 20 6
+            "S 5 -> S 4 S 3", // 16 5
+            "S 4 -> S 3 S 2", // 10 4
+            "S 3 -> S 2 S 1", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar4Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 4 S 5", // 26 6
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar5Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 4 S 5", // 21 6
+            "S 5 -> S 3 S 4", // 13 5
+            "S 4 -> S 2 S 3", // 8 4
+            "S 3 -> S 1 S 2", // 5 3
+            "S 2 -> S 0 S 1", // 3 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar6Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 1 S 3 S 5", // 21 6
+            "S 5 -> S 3 S 4", // 13 5
+            "S 4 -> S 2 S 3", // 8 4
+            "S 3 -> S 1 S 2", // 5 3
+            "S 2 -> S 0 S 1", // 3 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar7Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 2 S 5", // 20 6
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar8Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 20 1
+            "S 0 -> a" // 1
+        }, "S 1", 1);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar9Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 10 -> S 0 S 9 S 0", // 20 10
+            "S 9 -> S 0 S 8 S 0", // 18 9
+            "S 8 -> S 0 S 7 S 0", // 16 8
+            "S 7 -> S 0 S 6 S 0", // 14 7
+            "S 6 -> S 0 S 5 S 0", // 12 6
+            "S 5 -> S 0 S 4 S 0", // 10 5
+            "S 4 -> S 0 S 3 S 0", // 8 4
+            "S 3 -> S 0 S 2 S 0", // 6 3
+            "S 2 -> S 0 S 1 S 0", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 10", 10);
+    }
+} // namespace c6288_10_helpers
+
+
+void HardwareBenchmarks::c6288_10(unsigned int grammarChoice) {
+
+    std::tuple<std::vector<std::string>, std::string, int> grammarData;
+
+    switch (grammarChoice) {
+        case 0:
+            grammarData = c6288_10_helpers::grammar0Productions();
+            break;
+        case 1:
+            grammarData = c6288_10_helpers::grammar1Productions();
+            break;
+        case 2:
+            grammarData = c6288_10_helpers::grammar2Productions();
+            break;
+        case 3:
+            grammarData = c6288_10_helpers::grammar3Productions();
+            break;
+        case 4:
+            grammarData = c6288_10_helpers::grammar4Productions();
+            break;
+        case 5:
+            grammarData = c6288_10_helpers::grammar5Productions();
+            break;
+        case 6:
+            grammarData = c6288_10_helpers::grammar6Productions();
+            break;
+        case 7:
+            grammarData = c6288_10_helpers::grammar7Productions();
+            break;
+        case 8:
+            grammarData = c6288_10_helpers::grammar8Productions();
+            break;
+        case 9:
+            grammarData = c6288_10_helpers::grammar9Productions();
+            break;
+        default:
+            throw std::invalid_argument("Invalid grammar choice");
+    }
 
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    std::vector<std::string> productions = {
-        "S 19 -> S 0 S 18", // 20
-        "S 18 -> S 0 S 17", // 19
-        "S 17 -> S 0 S 16", // 18
-        "S 16 -> S 0 S 15", // 17
-        "S 15 -> S 0 S 14", // 16
-        "S 14 -> S 0 S 13", // 15
-        "S 13 -> S 0 S 12", // 14
-        "S 12 -> S 0 S 11", // 13
-        "S 11 -> S 0 S 10", // 12
-        "S 10 -> S 0 S 9", // 11
-        "S 9 -> S 0 S 8", // 10
-        "S 8 -> S 0 S 7", // 9
-        "S 7 -> S 0 S 6", // 8
-        "S 6 -> S 0 S 5", // 7
-        "S 5 -> S 0 S 4", // 6
-        "S 4 -> S 0 S 3", // 5
-        "S 3 -> S 0 S 2", // 4
-        "S 2 -> S 0 S 1", // 3
-        "S 1 -> S 0 S 0", // 2
-        "S 0 -> a" // 1
-    };
-    grammar->constructGrammar(productions, "S 19");
+    grammar->constructGrammar(std::get<0>(grammarData), std::get<1>(grammarData));
     grammar->InstallNumVars();
     grammar->updateLevel();
 
@@ -44,7 +194,7 @@ void HardwareBenchmarks::c6288_10() {
 
     int coeff = 1;
     int offset = 0;
-    int max_level = 5;
+    int max_level = std::get<2>(grammarData);
 
     G_CFLOBDD a0 = MkProjection(coeff*0 + offset, max_level, grammar);
     G_CFLOBDD a1 = MkProjection(coeff*1 + offset, max_level, grammar);
@@ -1002,7 +1152,7 @@ void HardwareBenchmarks::c6288_10() {
     std::vector<unsigned int> nodeCount (20, 0);
     std::vector<unsigned int> edgeCount (20, 0);
 
-    std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
+    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>;
     Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
     sum0.GroupCountNodesAndEdges(nodeCount[0], edgeCount[0], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
     sum1.GroupCountNodesAndEdges(nodeCount[1], edgeCount[1], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);

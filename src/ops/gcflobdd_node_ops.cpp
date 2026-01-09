@@ -1,15 +1,49 @@
 #include "gcflobdd_node_ops.h"
 #include <unordered_map>
 #include "../gcflobdd/gcflobdd_node.h"
+#include "../gcflobdd/gcflobdd_bdd_node.h"
+#include "bdd_node_ops.h"
 
 namespace G_CFL_OBDD {
+
+/* Distinction Cache Key */
+
+DistinctionCacheKey::DistinctionCacheKey(unsigned int level, unsigned int i, std::shared_ptr<GrammarNode>& grammar)
+    : level(level), i(i), grammar(grammar) {}
+
+unsigned int DistinctionCacheKey::Hash(unsigned int modsize) const {
+    size_t h1 = std::hash<unsigned int>{}(level);
+    size_t h2 = std::hash<unsigned int>{}(i);
+    size_t h3 = std::hash<std::shared_ptr<GrammarNode>>{}(grammar);
+    return (h1 ^ (h2 << 1) ^ (h3 << 2)) % modsize;
+}
+
+DistinctionCacheKey& DistinctionCacheKey::operator= (const DistinctionCacheKey& p) {
+    if (this != &p) {
+        level = p.level;
+        i = p.i;
+        grammar = p.grammar;
+    }
+    return *this;
+}
+
+bool DistinctionCacheKey::operator!= (const DistinctionCacheKey& p) const {
+    return (level != p.level || i != p.i || grammar != p.grammar);
+}
+bool DistinctionCacheKey::operator== (const DistinctionCacheKey& p) const {
+    return (level == p.level && i == p.i && grammar == p.grammar);
+}
+
+std::unordered_map<DistinctionCacheKey, G_CFLOBDDNodeHandle, DistinctionCacheKey::DistinctionCacheKey_Hash, DistinctionCacheKey::DistinctionCacheKey_Equal> distinctionNode;
+
+
 
 G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarNode>& grammar) {
     NoDistinctionCacheKey key(level, grammar);
     if (G_CFLOBDDNodeHandle::NoDistinctionNode.find(key) != G_CFLOBDDNodeHandle::NoDistinctionNode.end()) {
         return G_CFLOBDDNodeHandle::NoDistinctionNode[key];
     }
-    if (grammar->level == 0) {
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         GrammarNonTerminalNode* gNode = dynamic_cast<GrammarNonTerminalNode*>(grammar.get());
         assert(gNode != nullptr);
         assert(gNode->children.size() == 1);
@@ -17,6 +51,12 @@ G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarN
         assert(gNode->children[0]->level == 0);
         G_CFLOBDDNodeHandle::NoDistinctionNode[key] = G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
         return G_CFLOBDDNodeHandle::G_CFLOBDDDontCareNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkNoDistinction_BDD(grammar->numVars);
+        G_CFLOBDDNodeHandle::NoDistinctionNode[key] = handle;
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);
@@ -30,20 +70,21 @@ G_CFLOBDDNodeHandle MkNoDistinction(unsigned int level, std::shared_ptr<GrammarN
 
     node->numLayers = numChildren;
     auto connections = new ConnectionList[numChildren];
-    G_CFLOBDDReturnMapHandle m0; m0.AddToEnd(0); m0.Canonicalize();
+    G_CFLOBDDReturnMapHandle m0 (1); m0.AddToEnd(0); m0.Canonicalize();
     for (unsigned int i = 0; i < numChildren; i++) {
         auto& childGrammar = gNode->children[i];
         auto layer_i = MkNoDistinction(level - 1, childGrammar);
         auto conn = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m0);
+        connections[i].Reserve(1);
         connections[i].AddConnection(conn);
-        connections[i].Canonicalize();
+        // connections[i].Canonicalize();
     }
 
     node->connections = connections;
     node->numExits = 1;
     node->grammar = grammar;
 
-    auto handle = G_CFLOBDDNodeHandle(std::shared_ptr<G_CFLOBDDNode>(node));
+    auto handle = G_CFLOBDDNodeHandle(node);
     G_CFLOBDDNodeHandle::NoDistinctionNode[key] = handle;
     return handle;
 }
@@ -67,9 +108,21 @@ long int findChildIndexForVariable(unsigned int i, std::shared_ptr<GrammarNode>&
 }
 
 G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::shared_ptr<GrammarNode>& grammar) {
-    if (grammar->level == 0) {
+    // auto key = DistinctionCacheKey(level, i, grammar);
+    // if (distinctionNode.find(key) != distinctionNode.end()) {
+    //     return distinctionNode[key];
+    // }
+
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         assert(i == 0);
+        // distinctionNode[key] = G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
         return G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkDistinction_BDD(grammar->numVars, i);
+        // distinctionNode[key] = handle;
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);
@@ -82,7 +135,7 @@ G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::share
     assert(numChildren > 0);
 
     node->numLayers = numChildren;
-    auto connections = new ConnectionList[numChildren];
+    node->connections = new ConnectionList[numChildren];
     auto index = findChildIndexForVariable(i, grammar);
     assert(index >= 0 && index < numChildren);
 
@@ -92,16 +145,18 @@ G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::share
         auto& childGrammar = gNode->children[layer];
         auto layer_i = MkNoDistinction(level - 1, childGrammar);
         auto conn = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m0);
-        connections[layer].AddConnection(conn);
-        connections[layer].Canonicalize();
+        node->connections[layer].Reserve(1);
+        node->connections[layer].AddConnection(conn);
+        // connections[layer].Canonicalize();
         numVarsBeforeIndex += childGrammar->numVars;
     }
     auto childGrammarAtIndex = gNode->children[index];
     auto layer_index = MkDistinction(level - 1, i - numVarsBeforeIndex, childGrammarAtIndex);
     G_CFLOBDDReturnMapHandle m01; m01.AddToEnd(0); m01.AddToEnd(1); m01.Canonicalize();
     auto conn0 = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_index, m01);
-    connections[index].AddConnection(conn0);
-    connections[index].Canonicalize();
+    node->connections[index].Reserve(1);
+    node->connections[index].AddConnection(conn0);
+    // connections[index].Canonicalize();
 
     G_CFLOBDDReturnMapHandle m1; m1.AddToEnd(1); m1.Canonicalize();
     for (unsigned int layer = index + 1; layer < numChildren; layer++) {
@@ -109,21 +164,30 @@ G_CFLOBDDNodeHandle MkDistinction(unsigned int level, unsigned int i, std::share
         auto layer_i = MkNoDistinction(level - 1, childGrammar);
         auto conn_0 = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m0);
         auto conn_1 = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m1);
-        connections[layer].AddConnection(conn_0);
-        connections[layer].AddConnection(conn_1);
-        connections[layer].Canonicalize();
+        node->connections[layer].Reserve(2);
+        node->connections[layer].AddConnection(conn_0);
+        node->connections[layer].AddConnection(conn_1);
+        // connections[layer].Canonicalize();
     }
 
-    node->connections = connections;
     node->numExits = 2;
     node->grammar = grammar;
 
-    return G_CFLOBDDNodeHandle(node);
+    auto handle = G_CFLOBDDNodeHandle(node);
+
+    // distinctionNode[key] = handle;
+
+    return handle;
 }
 
 G_CFLOBDDNodeHandle MkParity(unsigned int level, std::shared_ptr<GrammarNode>& grammar) {
-    if (grammar->level == 0) {
+    if (grammar->level == 0 && !grammar->isBDDGrammar()) {
         return G_CFLOBDDNodeHandle::G_CFLOBDDForkNodeHandle;
+    } else if (grammar->level == 0 && grammar->isBDDGrammar()) {
+        // BDD terminal node at level 0
+        auto handle = MkParity_BDD(grammar->numVars);
+        handle.handleContents->grammar = grammar;
+        return handle;
     }
 
     G_CFLOBDDInternalNode *node = new G_CFLOBDDInternalNode(level);
@@ -136,7 +200,7 @@ G_CFLOBDDNodeHandle MkParity(unsigned int level, std::shared_ptr<GrammarNode>& g
     assert(numChildren > 0);
 
     node->numLayers = numChildren;
-    auto connections = new ConnectionList[numChildren];
+    node->connections = new ConnectionList[numChildren];
 
     G_CFLOBDDReturnMapHandle m01; m01.AddToEnd(0); m01.AddToEnd(1); m01.Canonicalize();
     G_CFLOBDDReturnMapHandle m10; m10.AddToEnd(1); m10.AddToEnd(0); m10.Canonicalize();
@@ -146,14 +210,14 @@ G_CFLOBDDNodeHandle MkParity(unsigned int level, std::shared_ptr<GrammarNode>& g
         auto layer_i = MkParity(level - 1, childGrammar);
         auto conn0 = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m01);
         auto conn1 = ConnectionT<G_CFLOBDDReturnMapHandle>(layer_i, m10);
-        connections[layer].AddConnection(conn0);
-        connections[layer].AddConnection(conn1);
-        connections[layer].Canonicalize();
+        node->connections[layer].Reserve(2);
+        node->connections[layer].AddConnection(conn0);
+        node->connections[layer].AddConnection(conn1);
+        // connections[layer].Canonicalize();
         numVars += childGrammar->numVars;
     }
 
-    node->connections = connections;
-    node->numExits = 2;
+     node->numExits = 2;
     node->grammar = grammar;
 
     return G_CFLOBDDNodeHandle(node); 

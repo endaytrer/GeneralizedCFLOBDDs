@@ -10,50 +10,150 @@ using namespace std;
 using namespace HardwareBenchmarks;
 using namespace std::chrono;
 
-void HardwareBenchmarks::c6288_8() {
-    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
-    // std::vector<std::string> productions = {
-    //     "S 15 -> S 0 S 14", // 16
-    //     "S 14 -> S 0 S 13", // 15
-    //     "S 13 -> S 0 S 12", // 14
-    //     "S 12 -> S 0 S 11", // 13
-    //     "S 11 -> S 0 S 10", // 12
-    //     "S 10 -> S 0 S 9", // 11
-    //     "S 9 -> S 0 S 8", // 10
-    //     "S 8 -> S 0 S 7", // 9
-    //     "S 7 -> S 0 S 6", // 8
-    //     "S 6 -> S 0 S 5", // 7
-    //     "S 5 -> S 0 S 4", // 6
-    //     "S 4 -> S 0 S 3", // 5
-    //     "S 3 -> S 0 S 2", // 4
-    //     "S 2 -> S 0 S 1", // 3
-    //     "S 1 -> S 0 S 0", // 2
-    //     "S 0 -> a" // 1
-    // };
+namespace c6288_8_helpers {
 
-    // std::vector<std::string> productions = {
-    //     "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 16
-    //     "S 0 -> a" // 1
-    // };
-    std::vector<std::string> productions = {
-        "S 4 -> S 3 S 3", // 16
-        "S 3 -> S 2 S 2", // 8
-        "S 2 -> S 1 S 1", // 4
-        "S 1 -> S 0 S 0", // 2
-        "S 0 -> a" // 1
-    };
-    grammar->constructGrammar(productions, "S 4");
+    std::tuple<std::vector<std::string>, std::string, int> grammar0Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 4 -> S 3 S 3", // 16
+            "S 3 -> S 2 S 2", // 8
+            "S 2 -> S 1 S 1", // 4
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a" // 1
+        }, "S 4", 4);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar1Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 15 -> S 0 S 14", // 16
+            "S 14 -> S 0 S 13", // 15
+            "S 13 -> S 0 S 12", // 14
+            "S 12 -> S 0 S 11", // 13
+            "S 11 -> S 0 S 10", // 12
+            "S 10 -> S 0 S 9", // 11
+            "S 9 -> S 0 S 8", // 10
+            "S 8 -> S 0 S 7", // 9
+            "S 7 -> S 0 S 6", // 8
+            "S 6 -> S 0 S 5", // 7
+            "S 5 -> S 0 S 4", // 6
+            "S 4 -> S 0 S 3", // 5
+            "S 3 -> S 0 S 2", // 4
+            "S 2 -> S 0 S 1", // 3
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a" // 1
+        }, "S 15", 15);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar2Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 5", 5);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar3Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 5 -> S 3 S 4", // 16 5
+            "S 4 -> S 2 S 3", // 10 4
+            "S 3 -> S 1 S 2", // 6 3
+            "S 2 -> S 1 S 1", // 4 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 5", 5);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar4Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 6 -> S 2 S 5", // 16 6
+            "S 5 -> S 3 S 4", // 13 5
+            "S 4 -> S 2 S 3", // 8 4
+            "S 3 -> S 1 S 2", // 5 3
+            "S 2 -> S 0 S 1", // 3 2
+            "S 1 -> S 0 S 0", // 2 1
+            "S 0 -> a" // 1
+        }, "S 6", 6);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar5Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 7 -> S 6 S 1", // 16
+            "S 6 -> S 5 S 1", // 14
+            "S 5 -> S 3 S 3", // 16
+            "S 4 -> S 2 S 3", // 12
+            "S 3 -> S 2 S 2", // 8
+            "S 2 -> S 1 S 1", // 4
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a" // 1
+        }, "S 7", 7);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar6Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 1 -> S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0 S 0", // 16
+            "S 0 -> a" // 1
+        }, "S 1", 1);
+    }
+
+    std::tuple<std::vector<std::string>, std::string, int> grammar7Productions() {
+        return make_tuple(std::vector<std::string> {
+            "S 2 -> S 1 S 1 S 1 S 1 S 1 S 1 S 1 S 1", // 8
+            "S 1 -> S 0 S 0", // 2
+            "S 0 -> a" // 1
+        }, "S 2", 2);
+    }
+
+} // namespace c6288_8_helpers
+
+void HardwareBenchmarks::c6288_8(unsigned int choice) {
+
+    std::tuple<std::vector<std::string>, std::string, int> grammarData;
+
+    switch (choice) {
+        case 0:
+            grammarData = c6288_8_helpers::grammar0Productions();
+            break;
+        case 1:
+            grammarData = c6288_8_helpers::grammar1Productions();
+            break;
+        case 2:
+            grammarData = c6288_8_helpers::grammar2Productions();
+            break;
+        case 3:
+            grammarData = c6288_8_helpers::grammar3Productions();
+            break;
+        case 4:
+            grammarData = c6288_8_helpers::grammar4Productions();
+            break;
+        case 5:
+            grammarData = c6288_8_helpers::grammar5Productions();
+            break;
+        case 6:
+            grammarData = c6288_8_helpers::grammar6Productions();
+            break;
+        case 7:
+            grammarData = c6288_8_helpers::grammar7Productions();
+            break;
+        default:
+            std::cerr << "Invalid grammar choice!" << std::endl;
+            return;
+    }
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    grammar->constructGrammar(std::get<0>(grammarData), std::get<1>(grammarData));
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
     int coeff = 1;
     int offset = 0;
-    int max_level = 4;
+    int max_level = std::get<2>(grammarData);
 
-    #define DESCENDING_NONINTERLEAVED 1
+    // #define DESCENDING_NONINTERLEAVED 1
     // #define DESCENDING_INTERLEAVED 0
     // #define AMANO_8BIT_OPTIMAL 1
+    #define ASCENDING_INTERLEAVED 1
 
     #ifdef DESCENDING_NONINTERLEAVED
     G_CFLOBDD a7 = MkProjection(coeff*0 + offset, max_level, grammar);
@@ -93,24 +193,43 @@ void HardwareBenchmarks::c6288_8() {
     // G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
     // #endif
 
-    #ifdef AMANO_8BIT_OPTIMAL
-    G_CFLOBDD a1 = MkProjection(coeff*0 + offset, max_level, grammar);
-    G_CFLOBDD a2 = MkProjection(coeff*1 + offset, max_level, grammar);
-    G_CFLOBDD a3 = MkProjection(coeff*2 + offset, max_level, grammar);
-    G_CFLOBDD a4 = MkProjection(coeff*3 + offset, max_level, grammar);
-    G_CFLOBDD b3 = MkProjection(coeff*4 + offset, max_level, grammar);
-    G_CFLOBDD b4 = MkProjection(coeff*5 + offset, max_level, grammar);
-    G_CFLOBDD b2 = MkProjection(coeff*6 + offset, max_level, grammar);
-    G_CFLOBDD a5 = MkProjection(coeff*7 + offset, max_level, grammar);
-    G_CFLOBDD b5 = MkProjection(coeff*8 + offset, max_level, grammar);
-    G_CFLOBDD b1 = MkProjection(coeff*9 + offset, max_level, grammar);
-    G_CFLOBDD a6 = MkProjection(coeff*10 + offset, max_level, grammar);
-    G_CFLOBDD b6 = MkProjection(coeff*11 + offset, max_level, grammar);
-    G_CFLOBDD a0 = MkProjection(coeff*12 + offset, max_level, grammar);
-    G_CFLOBDD b7 = MkProjection(coeff*13 + offset, max_level, grammar);
+    #ifdef ASCENDING_INTERLEAVED
+    G_CFLOBDD a0 = MkProjection(coeff*0 + offset, max_level, grammar);
+    G_CFLOBDD b0 = MkProjection(coeff*1 + offset, max_level, grammar);
+    G_CFLOBDD a1 = MkProjection(coeff*2 + offset, max_level, grammar);
+    G_CFLOBDD b1 = MkProjection(coeff*3 + offset, max_level, grammar);
+    G_CFLOBDD a2 = MkProjection(coeff*4 + offset, max_level, grammar);
+    G_CFLOBDD b2 = MkProjection(coeff*5 + offset, max_level, grammar);
+    G_CFLOBDD a3 = MkProjection(coeff*6 + offset, max_level, grammar);
+    G_CFLOBDD b3 = MkProjection(coeff*7 + offset, max_level, grammar);
+    G_CFLOBDD a4 = MkProjection(coeff*8 + offset, max_level, grammar);
+    G_CFLOBDD b4 = MkProjection(coeff*9 + offset, max_level, grammar);
+    G_CFLOBDD a5 = MkProjection(coeff*10 + offset, max_level, grammar);
+    G_CFLOBDD b5 = MkProjection(coeff*11 + offset, max_level, grammar);
+    G_CFLOBDD a6 = MkProjection(coeff*12 + offset, max_level, grammar);
+    G_CFLOBDD b6 = MkProjection(coeff*13 + offset, max_level, grammar);
     G_CFLOBDD a7 = MkProjection(coeff*14 + offset, max_level, grammar);
-    G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
+    G_CFLOBDD b7 = MkProjection(coeff*15 + offset, max_level, grammar);
     #endif
+
+    // #ifdef AMANO_8BIT_OPTIMAL
+    // G_CFLOBDD a1 = MkProjection(coeff*0 + offset, max_level, grammar);
+    // G_CFLOBDD a2 = MkProjection(coeff*1 + offset, max_level, grammar);
+    // G_CFLOBDD a3 = MkProjection(coeff*2 + offset, max_level, grammar);
+    // G_CFLOBDD a4 = MkProjection(coeff*3 + offset, max_level, grammar);
+    // G_CFLOBDD b3 = MkProjection(coeff*4 + offset, max_level, grammar);
+    // G_CFLOBDD b4 = MkProjection(coeff*5 + offset, max_level, grammar);
+    // G_CFLOBDD b2 = MkProjection(coeff*6 + offset, max_level, grammar);
+    // G_CFLOBDD a5 = MkProjection(coeff*7 + offset, max_level, grammar);
+    // G_CFLOBDD b5 = MkProjection(coeff*8 + offset, max_level, grammar);
+    // G_CFLOBDD b1 = MkProjection(coeff*9 + offset, max_level, grammar);
+    // G_CFLOBDD a6 = MkProjection(coeff*10 + offset, max_level, grammar);
+    // G_CFLOBDD b6 = MkProjection(coeff*11 + offset, max_level, grammar);
+    // G_CFLOBDD a0 = MkProjection(coeff*12 + offset, max_level, grammar);
+    // G_CFLOBDD b7 = MkProjection(coeff*13 + offset, max_level, grammar);
+    // G_CFLOBDD a7 = MkProjection(coeff*14 + offset, max_level, grammar);
+    // G_CFLOBDD b0 = MkProjection(coeff*15 + offset, max_level, grammar);
+    // #endif
 
 
     std::cout << "	pp0_0	 " << std::endl;
@@ -536,7 +655,6 @@ void HardwareBenchmarks::c6288_8() {
     G_CFLOBDD	gate0_6_5	=  MkNor(gate0_6_3, gate0_6_4);
     G_CFLOBDD	gate0_6_6	=  MkNor(pp0_6, gate0_6_4);
     G_CFLOBDD	sum6	=  MkNor(gate0_6_5, gate0_6_6);
-    sum6.print(std::cout);
     G_CFLOBDD	c0_6	= MkNor(gate0_6_0,gate0_6_4); 
     G_CFLOBDD	gate1_6_0	=  MkNor(s2_5, c1_5);
     G_CFLOBDD	gate1_6_1	=  MkNor(s2_5, gate1_6_0);
@@ -756,11 +874,11 @@ void HardwareBenchmarks::c6288_8() {
     std::vector<unsigned int> edgeCount (16, 0);
     std::vector<G_CFLOBDD> sums = {sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7,
                                    sum8, sum9, sum10, sum11, sum12, sum13, sum14, sum15};
-    // std::unordered_set<G_CFLOBDDNode*> visitedNodesDuringGroupCountNodesAndEdges;
-    // Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
-    // for (unsigned int i = 0; i < 16; i++) {
-    //     sums[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
-    // }
+    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>;
+    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    for (unsigned int i = 0; i < 16; i++) {
+        sums[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    }
 
     unsigned int totalNodes = 0;
     unsigned int totalEdges = 0;
@@ -770,9 +888,7 @@ void HardwareBenchmarks::c6288_8() {
     }
 
     for (unsigned int i = 0; i < 16; i++) {
-        unsigned int nodeCount = 0, edgeCount = 0;
-        sums[i].CountNodesAndEdges(nodeCount, edgeCount);
-        std::cout << "Sum " << i << ": Nodes = " << nodeCount << ", Edges = " << edgeCount << std::endl;
+        std::cout << "Sum " << i << " - Nodes: " << nodeCount[i] << ", Edges: " << edgeCount[i] << ", Total: " << (nodeCount[i] + edgeCount[i]) << std::endl;
     }
 
     std::cout << "Total Nodes: " << totalNodes << std::endl;

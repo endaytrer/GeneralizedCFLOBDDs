@@ -26,10 +26,10 @@ namespace G_CFL_OBDD {
 	{
 	public:
 		ConnectionT();                                  // Default constructor
-		ConnectionT(const ConnectionT &C) = default;              // Copy constructor
+		ConnectionT(const ConnectionT &C);              // Copy constructor
 		ConnectionT(G_CFLOBDDNode *entryPoint, Handle &returnMapHandle);
 		ConnectionT(G_CFLOBDDNodeHandle &entryPointHandle, Handle &returnMapHandle);
-		~ConnectionT() = default;                                 // Destructor
+		~ConnectionT();                                 // Destructor
 
 		unsigned int Hash(unsigned int modsize) const;
 		ConnectionT& operator= (const ConnectionT &C);   // Overloaded =
@@ -41,6 +41,20 @@ namespace G_CFL_OBDD {
 
 	public:
 		std::ostream& print(std::ostream & out = std::cout) const;
+
+		struct ConnectionHash {
+		public:
+			size_t operator()(const ConnectionT<Handle>& c) const {
+				return c.Hash(997);;
+			}
+		};
+
+		struct ConnectionEqual {
+		public:
+			bool operator()(const ConnectionT<Handle>& a, const ConnectionT<Handle>& b) const {
+				return (a == b);
+			}
+		};
 	};
 
 

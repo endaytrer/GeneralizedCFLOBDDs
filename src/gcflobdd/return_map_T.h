@@ -31,8 +31,8 @@ class ReturnMapHandle {
   unsigned int Size();
   void AddToEnd(T y);
   bool Member(T y);
-  T Lookup(int x);
-  int LookupInv(T y);
+  T Lookup(int x) const;
+  int LookupInv(T y) const;
   void Canonicalize();
   ReturnMapHandle<T> Complement();
   ReturnMapHandle<T> Compose(ReductionMapHandle redMapHandle);
@@ -285,13 +285,13 @@ bool ReturnMapHandle<T>::Member(T y)
 }
 
 template <typename T>
-T ReturnMapHandle<T>::Lookup(int x)
+T ReturnMapHandle<T>::Lookup(int x) const
 {
 	return mapContents->mapArray[x];
 }
 
 template <typename T>
-int ReturnMapHandle<T>::LookupInv(T y)
+int ReturnMapHandle<T>::LookupInv(T y) const
 {
 	for (unsigned i = 0; i < mapContents->mapArray.size(); i++)
 	{

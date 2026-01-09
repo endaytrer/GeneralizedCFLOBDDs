@@ -24,7 +24,8 @@ template<>
 G_CFLOBDD_T<int>::G_CFLOBDD_T()
 {
     auto grammar = std::make_shared<Grammar>();
-    root = MkTrueTop(-1, grammar);
+    // root = MkTrueTop(-1, grammar);
+    root = NULL; // To be set later
 }
 
 
@@ -85,6 +86,7 @@ G_CFLOBDD MkNand(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
     assert(f.root->grammar == g.root->grammar);
+    // return MkNot(MkAnd(f.root, g.root));
     return G_CFLOBDD(MkNand(f.root, g.root));
 }
 
@@ -101,6 +103,7 @@ G_CFLOBDD MkNor(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
     assert(f.root->grammar == g.root->grammar);
+    // return MkNot(MkOr(f.root, g.root));
     return G_CFLOBDD(MkNor(f.root, g.root));
 }
 

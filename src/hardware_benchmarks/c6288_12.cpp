@@ -12,40 +12,105 @@ using namespace std::chrono;
 
 void HardwareBenchmarks::c6288_12() {
     std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    // std::vector<std::string> productions = {
+    //     "S 23 -> S 0 S 22", // 24
+    //     "S 22 -> S 0 S 21", // 23
+    //     "S 21 -> S 0 S 20", // 22
+    //     "S 20 -> S 0 S 19", // 21
+    //     "S 19 -> S 0 S 18", // 20
+    //     "S 18 -> S 0 S 17", // 19
+    //     "S 17 -> S 0 S 16", // 18
+    //     "S 16 -> S 0 S 15", // 17
+    //     "S 15 -> S 0 S 14", // 16
+    //     "S 14 -> S 0 S 13", // 15
+    //     "S 13 -> S 0 S 12", // 14
+    //     "S 12 -> S 0 S 11", // 13
+    //     "S 11 -> S 0 S 10", // 12
+    //     "S 10 -> S 0 S 9", // 11
+    //     "S 9 -> S 0 S 8", // 10
+    //     "S 8 -> S 0 S 7", // 9
+    //     "S 7 -> S 0 S 6", // 8
+    //     "S 6 -> S 0 S 5", // 7
+    //     "S 5 -> S 0 S 4", // 6
+    //     "S 4 -> S 0 S 3", // 5
+    //     "S 3 -> S 0 S 2", // 4
+    //     "S 2 -> S 0 S 1", // 3
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a" // 1
+    // };
+
+    // std::vector<std::string> productions = {
+    //     "S 7 -> S 6 S 1", // 24 7
+    //     "S 6 -> S 5 S 3", // 22 6
+    //     "S 5 -> S 3 S 4", // 16 5
+    //     "S 4 -> S 2 S 3", // 10 4
+    //     "S 3 -> S 1 S 2", // 6 3
+    //     "S 2 -> S 1 S 1", // 4 2
+    //     "S 1 -> S 0 S 0", // 2 1
+    //     "S 0 -> a" // 1
+    // };
+
+    // std::vector<std::string> productions = {
+    //     "S 7 -> S 6 S 1", // 24 7
+    //     "S 6 -> S 3 S 5", // 22 6
+    //     "S 5 -> S 3 S 4", // 16 5
+    //     "S 4 -> S 2 S 3", // 10 4
+    //     "S 3 -> S 1 S 2", // 6 3
+    //     "S 2 -> S 1 S 1", // 4 2
+    //     "S 1 -> S 0 S 0", // 2 1
+    //     "S 0 -> a" // 1
+    // };
+
+    // std::vector<std::string> productions = {
+    //     "S 7 -> S 6 S 1", // 24 7
+    //     "S 6 -> S 5 S 3", // 22 6
+    //     "S 5 -> S 4 S 3", // 16 5
+    //     "S 4 -> S 3 S 2", // 10 4
+    //     "S 3 -> S 2 S 1", // 6 3
+    //     "S 2 -> S 1 S 1", // 4 2
+    //     "S 1 -> S 0 S 0", // 2 1
+    //     "S 0 -> a" // 1
+    // };
+
     std::vector<std::string> productions = {
-        "S 23 -> S 0 S 22", // 24
-        "S 22 -> S 0 S 21", // 23
-        "S 21 -> S 0 S 20", // 22
-        "S 20 -> S 0 S 19", // 21
-        "S 19 -> S 0 S 18", // 20
-        "S 18 -> S 0 S 17", // 19
-        "S 17 -> S 0 S 16", // 18
-        "S 16 -> S 0 S 15", // 17
-        "S 15 -> S 0 S 14", // 16
-        "S 14 -> S 0 S 13", // 15
-        "S 13 -> S 0 S 12", // 14
-        "S 12 -> S 0 S 11", // 13
-        "S 11 -> S 0 S 10", // 12
-        "S 10 -> S 0 S 9", // 11
-        "S 9 -> S 0 S 8", // 10
-        "S 8 -> S 0 S 7", // 9
-        "S 7 -> S 0 S 6", // 8
-        "S 6 -> S 0 S 5", // 7
-        "S 5 -> S 0 S 4", // 6
-        "S 4 -> S 0 S 3", // 5
-        "S 3 -> S 0 S 2", // 4
-        "S 2 -> S 0 S 1", // 3
-        "S 1 -> S 0 S 0", // 2
+        "S 7 -> S 5 S 6", // 24 7
+        "S 6 -> S 4 S 5", // 21 6
+        "S 5 -> S 3 S 4", // 13 5
+        "S 4 -> S 2 S 3", // 8 4
+        "S 3 -> S 1 S 2", // 5 3
+        "S 2 -> S 0 S 1", // 3 2
+        "S 1 -> S 0 S 0", // 2 1
         "S 0 -> a" // 1
     };
-    grammar->constructGrammar(productions, "S 23");
+
+    // std::vector<std::string> productions = {
+    //     "S 6 -> S 5 S 1", // 23 6
+    //     "S 5 -> S 4 A 4", // 22 5
+    //     "A 4 -> S 3 S 3", // 12 4
+    //     "S 4 -> S 2 S 3", // 10 4
+    //     "S 3 -> S 1 S 2", // 6 3
+    //     "S 2 -> S 1 S 1", // 4 2
+    //     "S 1 -> S 0 S 0", // 2 1
+    //     "S 0 -> a" // 1
+    // };
+
+    // std::vector<std::string> productions = {
+    //     "S 5 -> S 4 S 4", // 32
+    //     "S 4 -> S 3 S 3", // 16
+    //     "S 3 -> S 2 S 2", // 8
+    //     "S 2 -> S 1 S 1", // 4
+    //     "S 1 -> S 0 S 0", // 2
+    //     "S 0 -> a" // 1
+    // };
+
+    grammar->constructGrammar(productions, "S 7");
     grammar->InstallNumVars();
     grammar->updateLevel();
 
     auto start = high_resolution_clock::now();
     int coeff = 1;
     int offset = 0;
-    int max_level = 23;
+    int max_level = 7;
 
     G_CFLOBDD a0 = MkProjection(coeff*0 + offset, max_level, grammar);
     G_CFLOBDD a1 = MkProjection(coeff*1 + offset, max_level, grammar);
@@ -1448,4 +1513,28 @@ void HardwareBenchmarks::c6288_12() {
 
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start); 
+
+    std::cout << "Time taken by CFLOBDD C6288 12-bit multiplier: "
+         << duration.count() << " milliseconds" << std::endl;
+    
+    std::vector<G_CFLOBDD> result = {sum0, sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8, sum9, sum10, sum11, sum12, sum13, sum14, sum15, sum16, sum17, sum18, sum19, sum20, sum21, sum22, sum23};
+
+    unsigned int total_nodes = 0;
+    unsigned int total_edges = 0;
+    vector<unsigned int> nodeCount(result.size(), 0);
+    vector<unsigned int> edgeCount(result.size(), 0);
+    Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDNodeHandle>;
+    Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges = new Hashset<G_CFLOBDDReturnMapBody>;
+    for (unsigned int i = 0; i < result.size(); i++) {
+        result[i].GroupCountNodesAndEdges(nodeCount[i], edgeCount[i], visitedNodesDuringGroupCountNodesAndEdges, visitedEdgesDuringGroupCountNodesAndEdges);
+    }
+
+    for (unsigned int i = 0; i < result.size(); i++) {
+        total_nodes += nodeCount[i];
+        total_edges += edgeCount[i];
+    }
+
+    std::cout << "Total number of nodes in the CFLOBDD representation of the product: " << total_nodes << std::endl;
+    std::cout << "Total number of edges in the CFLOBDD representation of the product: " << total_edges << std::endl;
+    std::cout << "Total memory : " << (total_nodes + total_edges) << std::endl;
 }

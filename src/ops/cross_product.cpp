@@ -8,6 +8,9 @@
 #include "../ops/gcflobdd_node_ops.h"
 #include "../utils/intpair.h"
 #include "cross_product.h"
+#include "cross_product_cache_utils.h"
+#include "../gcflobdd/gcflobdd_bdd_node.h"
+#include "cross_product_bdd.h"
 
 using namespace G_CFL_OBDD;
 
@@ -20,8 +23,8 @@ using namespace G_CFL_OBDD;
 //***************************************************************
 
 // Initializations of static members ---------------------------------
-// Hashset<PairProductMapBody> *PairProductMapBody::canonicalPairProductMapBodySet = new Hashset<PairProductMapBody>(HASHSET_NUM_BUCKETS);
-std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> PairProductMapBody::canonicalPairProductMapBodySet;
+Hashset<PairProductMapBody> *PairProductMapBody::canonicalPairProductMapBodySet = new Hashset<PairProductMapBody>(HASHSET_NUM_BUCKETS);
+// std::unordered_set<std::weak_ptr<PairProductMapBody>, PairProductMapBody::PPHash, PairProductMapBody::PPEqual> PairProductMapBody::canonicalPairProductMapBodySet;
 
 // Constructor
 PairProductMapBody::PairProductMapBody()
@@ -36,12 +39,12 @@ void PairProductMapBody::IncrRef()
 
 void PairProductMapBody::DecrRef()
 {
-//   if (--refCount == 0) {    // Warning: Saturation not checked
-//     if (isCanonical) {
-//       PairProductMapBody::canonicalPairProductMapBodySet.erase(this);
-//     }
-//     delete this;
-//   }
+  if (--refCount == 0) {    // Warning: Saturation not checked
+    if (isCanonical) {
+      PairProductMapBody::canonicalPairProductMapBodySet->DeleteEq(this);
+    }
+    delete this;
+  }
 }
 
 unsigned int PairProductMapBody::Hash(unsigned int modsize) const
@@ -85,7 +88,7 @@ intpair& PairProductMapBody::operator[](unsigned int i){                       /
 	return mapArray[i];
 }
 
-unsigned int PairProductMapBody::Size(){
+unsigned int PairProductMapBody::Size() const {
 	return (unsigned int)mapArray.size();
 }
 
@@ -116,15 +119,7 @@ PairProductMapHandle::PairProductMapHandle()
 // Destructor
 PairProductMapHandle::~PairProductMapHandle()
 {
-//   mapContents->DecrRef();
-    if (mapContents != NULL) {
-      auto it = PairProductMapBody::canonicalPairProductMapBodySet.find(mapContents);
-      if (it != PairProductMapBody::canonicalPairProductMapBodySet.end() && !it->lock()) {
-          // Found expired node -> remove it lazily
-          PairProductMapBody::canonicalPairProductMapBodySet.erase(it);
-          return;
-      }
-    }
+  mapContents->DecrRef();
 }
 
 // Copy constructor
@@ -137,11 +132,14 @@ PairProductMapHandle::PairProductMapHandle(const PairProductMapHandle &r)
 // Overloaded assignment
 PairProductMapHandle& PairProductMapHandle::operator= (const PairProductMapHandle &r)
 {
-    if (this != &r) // avoid self-assignment
-    {
-        mapContents = r.mapContents; // shared_ptr automatically manages reference count
-    }
-    return *this;
+  if (this != &r)      // don't assign to self!
+  {
+    PairProductMapBody *temp = mapContents;
+    mapContents = r.mapContents;
+    mapContents->IncrRef();
+    temp->DecrRef();
+  }
+  return *this;
 }
 
 // Overloaded !=
@@ -164,10 +162,10 @@ std::ostream& operator<< (std::ostream & out, const PairProductMapHandle &r)
 
 unsigned int PairProductMapHandle::Hash(unsigned int modsize) const
 {
-  return ((unsigned int) reinterpret_cast<uintptr_t>(mapContents.get()) >> 2) % modsize;
+  return ((unsigned int) reinterpret_cast<uintptr_t>(mapContents) >> 2) % modsize;
 }
 
-unsigned int PairProductMapHandle::Size()
+unsigned int PairProductMapHandle::Size() const
 {
   return mapContents->Size();
 }
@@ -181,6 +179,13 @@ void PairProductMapHandle::AddToEnd(const intpair& p)
 {
   assert(mapContents->refCount <= 1);
   mapContents->AddToEnd(p);
+}
+
+void PairProductMapHandle::Extend(const PairProductMapHandle& other)
+{
+    for (unsigned int i = 0; i < other.Size(); i++) {
+        mapContents->mapArray.push_back(other.mapContents->mapArray[i]);
+    }
 }
 
 bool PairProductMapHandle::Member(intpair& p)
@@ -203,21 +208,18 @@ int PairProductMapHandle::Lookup(intpair& p)
 
 void PairProductMapHandle::Canonicalize()
 {
-    auto it = PairProductMapBody::canonicalPairProductMapBodySet.find(mapContents);
-    if (it != PairProductMapBody::canonicalPairProductMapBodySet.end()) {
-        if (auto sp = it->lock()) {
-          // Found live node -> reuse it
-            mapContents = sp;
-            return;
-        } else {
-            // Found expired node -> remove it lazily
-            PairProductMapBody::canonicalPairProductMapBodySet.erase(it);
-        }
-    }
-
-    // Not found -> insert this node as canonical
-    PairProductMapBody::canonicalPairProductMapBodySet.insert(mapContents);
+  PairProductMapBody *answerContents;
+  unsigned int hash = PairProductMapBody::canonicalPairProductMapBodySet->GetHash(mapContents);
+  answerContents = PairProductMapBody::canonicalPairProductMapBodySet->Lookup(mapContents, hash);
+  if (answerContents == NULL) {
+    PairProductMapBody::canonicalPairProductMapBodySet->Insert(mapContents, hash);
     mapContents->isCanonical = true;
+  }
+  else {
+    answerContents->IncrRef();
+    mapContents->DecrRef();
+    mapContents = answerContents;
+  }
 }
 
 // Create map with reversed entries
@@ -231,104 +233,6 @@ PairProductMapHandle PairProductMapHandle::Flip()
   return answer;
 }
 
-//***************************************************************
-// PairProductKey
-//***************************************************************
-
-// Constructor
-PairProductKey::PairProductKey(G_CFLOBDDNodeHandle nodeHandle1, G_CFLOBDDNodeHandle nodeHandle2)
-  :  nodeHandle1(nodeHandle1), nodeHandle2(nodeHandle2)
-{
-}
-
-// Hash
-unsigned int PairProductKey::Hash(unsigned int modsize) const
-{
-  unsigned int hvalue = 0;
-  hvalue = (997 * nodeHandle1.Hash(modsize) + nodeHandle2.Hash(modsize)) % modsize;
-  return hvalue;
-}
-
-// print
-std::ostream& PairProductKey::print(std::ostream & out) const
-{
-  out << "(" << nodeHandle1 << ", " << nodeHandle2 << ")";
-  return out;
-}
-
-template <typename T>
-std::ostream& operator<< (std::ostream & out, const PairProductKey &p)
-{
-  p.print(out);
-  return(out);
-}
-
-PairProductKey& PairProductKey::operator= (const PairProductKey& i)
-{
-  if (this != &i)      // don't assign to self!
-  {
-    nodeHandle1 = i.nodeHandle1;
-    nodeHandle2 = i.nodeHandle2;
-  }
-  return *this;        
-}
-
-// Overloaded !=
-bool PairProductKey::operator!=(const PairProductKey& p)
-{
-  return (nodeHandle1 != p.nodeHandle1) || (nodeHandle2 != p.nodeHandle2);
-}
-
-// Overloaded ==
-bool PairProductKey::operator==(const PairProductKey& p) const
-{
-  return (nodeHandle1 == p.nodeHandle1) && (nodeHandle2 == p.nodeHandle2);
-}
-
-//***************************************************************
-// PairProductMemo
-//***************************************************************
-
-// Default constructor
-PairProductMemo::PairProductMemo()
-  :  nodeHandle(G_CFLOBDDNodeHandle()), pairProductMapHandle(PairProductMapHandle())
-{
-}
-
-// Constructor
-PairProductMemo::PairProductMemo(G_CFLOBDDNodeHandle nodeHandle, PairProductMapHandle pairProductMapHandle)
-  :  nodeHandle(nodeHandle), pairProductMapHandle(pairProductMapHandle)
-{
-}
-
-std::ostream& operator<< (std::ostream & out, const PairProductMemo &p)
-{
-  out << "(" << p.nodeHandle << ", " << p.pairProductMapHandle << ")";
-  return(out);
-}
-
-PairProductMemo& PairProductMemo::operator= (const PairProductMemo& i)
-{
-  if (this != &i)      // don't assign to self!
-  {
-    nodeHandle = i.nodeHandle;
-    pairProductMapHandle = i.pairProductMapHandle;
-  }
-  return *this;        
-}
-
-// Overloaded !=
-bool PairProductMemo::operator!=(const PairProductMemo& p)
-{
-  return (nodeHandle != p.nodeHandle) || (pairProductMapHandle != p.pairProductMapHandle);
-}
-
-// Overloaded ==
-bool PairProductMemo::operator==(const PairProductMemo& p)
-{
-  return (nodeHandle == p.nodeHandle) && (pairProductMapHandle == p.pairProductMapHandle);
-}
-
 // --------------------------------------------------------------------
 // PairProduct
 //
@@ -336,12 +240,13 @@ bool PairProductMemo::operator==(const PairProductMemo& p)
 // node's exits
 // --------------------------------------------------------------------
 
-static std::unordered_map<PairProductKey, PairProductMemo, PairProductKey::PairProductKey_Hash, PairProductKey::PairProductKey_Equal> pairProductCache;
+static Hashtable<PairProductKey<G_CFLOBDDNodeHandle>, PairProductMemo<G_CFLOBDDNodeHandle>> *pairProductCache = NULL;
+// static std::unordered_map<PairProductKey, PairProductMemo, PairProductKey::PairProductKey_Hash, PairProductKey::PairProductKey_Equal> pairProductCache;
 
 namespace G_CFL_OBDD {
 
-G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
-                              std::shared_ptr<G_CFLOBDDInternalNode> n2,
+G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDInternalNode* n1,
+                              G_CFLOBDDInternalNode* n2,
                               PairProductMapHandle &pairProductMapHandle
                              )
 {
@@ -372,8 +277,8 @@ G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
       unsigned int j;
       unsigned int curExit;
       int b1, b2;
-      
-      auto n = std::make_shared<G_CFLOBDDInternalNode>(n1->level);
+
+      auto n = new G_CFLOBDDInternalNode(n1->level);
       n->numLayers = n1->numLayers;  // = n2->numLayers
       n->connections = new ConnectionList[n->numLayers];
 
@@ -384,61 +289,72 @@ G_CFLOBDDNodeHandle PairProduct(std::shared_ptr<G_CFLOBDDInternalNode> n1,
                                                 );
       // Fill in n->AConnection.returnMapHandle
       // Correctness relies on LayerMapHandle having no duplicates
-      G_CFLOBDDReturnMapHandle aReturnHandle;
+      G_CFLOBDDReturnMapHandle aReturnHandle (LayerMapHandle.Size());
+      std::vector<intpair> layerMapHandlePairs (LayerMapHandle.Size(), intpair(0,0));
       for (unsigned int k = 0; k < LayerMapHandle.Size(); k++) {
         aReturnHandle.AddToEnd(k);
+        layerMapHandlePairs[k] = LayerMapHandle[k];
       }
       aReturnHandle.Canonicalize();
       auto layer_0_connection = Connection(aHandle, aReturnHandle);
+      n->connections[0].Reserve(1);
       n->connections[0].AddConnection(layer_0_connection);
-      n->connections[0].Canonicalize();
+
 
       for (unsigned int layer = 1; layer < n->numLayers; layer++) {
         // iterate over LayerMapHandle to get the pairs of BConnections
-        PairProductMapHandle newLayerMapHandle;
-        for (auto& it : LayerMapHandle.mapContents->mapArray) {
-            auto n1_connection = n1->connections[layer][it.First()];
-            auto n2_connection = n2->connections[layer][it.Second()];
+        std::vector<intpair> newLayerMapHandlePairs;
+        std::vector<int> tempVector (n1->numExits * n2->numExits, -1);
+        n->connections[layer].Reserve(layerMapHandlePairs.size());
+        
+        for (auto& it : layerMapHandlePairs) {
+          const Connection& n1_connection = n1->connections[layer][it.First()];
+          const Connection& n2_connection = n2->connections[layer][it.Second()];
 
-            PairProductMapHandle tempMapHandle;
-            G_CFLOBDDNodeHandle n_handle = PairProduct(*(n1_connection.entryPointHandle),
-                                                       *(n2_connection.entryPointHandle),
-                                                       tempMapHandle);
-            // Fill in n->connections[layer].returnMapHandle
-            G_CFLOBDDReturnMapHandle n_returnHandle;
-            std::unordered_map<intpair, int, intpair::intpair_hash, intpair::intpair_equal> tempMap;
-            for (unsigned int k = 0; k < tempMapHandle.Size(); k++) {
-                auto first = tempMapHandle[k].First();
-                auto second = tempMapHandle[k].Second();
-                auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
-                auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
+          // std::cout << "Layer " << layer << " processing connection pair (" << it.First() << ", " << it.Second() << ")\n";
+
+          PairProductMapHandle tempMapHandle;
+          G_CFLOBDDNodeHandle n_handle = PairProduct(*(n1_connection.entryPointHandle),
+                                                      *(n2_connection.entryPointHandle),
+                                                      tempMapHandle);
+          // Fill in n->connections[layer].returnMapHandle
+          G_CFLOBDDReturnMapHandle n_returnHandle(tempMapHandle.Size());
+          for (unsigned int k = 0; k < tempMapHandle.Size(); k++) {
+              auto first = tempMapHandle[k].First();
+              auto second = tempMapHandle[k].Second();
+              auto adjusted_first = n1_connection.returnMapHandle.Lookup(first);
+              auto adjusted_second = n2_connection.returnMapHandle.Lookup(second);
+              auto index = adjusted_first * n2->numExits + adjusted_second;
+              if (tempVector[index] == -1) {
+                // Not found
                 auto pair_index = intpair(adjusted_first, adjusted_second);
-                auto pi_it = tempMap.find(pair_index);
-                if (pi_it == tempMap.end()) {
-                  // Not found
-                  newLayerMapHandle.AddToEnd(pair_index);
-                  n_returnHandle.AddToEnd(newLayerMapHandle.Size() - 1);
-                  tempMap[pair_index] = newLayerMapHandle.Size() - 1;
-                }
-                else {
-                  // Found
-                  n_returnHandle.AddToEnd(pi_it->second);
-                }
-            }
-            n_returnHandle.Canonicalize();
-            auto new_connection = Connection(n_handle, n_returnHandle);
-            n->connections[layer].AddConnection(new_connection);
+                newLayerMapHandlePairs.push_back(pair_index);
+                n_returnHandle.AddToEnd(newLayerMapHandlePairs.size() - 1);
+                tempVector[index] = newLayerMapHandlePairs.size() - 1;
+              }
+              else {
+                // Found
+                n_returnHandle.AddToEnd(tempVector[index]);
+              }
           }
-          n->connections[layer].Canonicalize();
-        LayerMapHandle = newLayerMapHandle;
+          
+          n_returnHandle.Canonicalize();
+          Connection new_connection(n_handle, n_returnHandle);
+          n->connections[layer].AddConnection(new_connection);
+        }
+        layerMapHandlePairs = newLayerMapHandlePairs;
       }
-      n->numExits = LayerMapHandle.Size();
+
+      n->numExits = layerMapHandlePairs.size();
       n->grammar = n1->grammar; // = n2->grammar
-      pairProductMapHandle = LayerMapHandle;
+      for (int i = 0; i < (int)layerMapHandlePairs.size(); i++) {
+        pairProductMapHandle.AddToEnd(layerMapHandlePairs[i]);
+      }
+      // pairProductMapHandle = LayerMapHandle;
+      pairProductMapHandle.Canonicalize();
 #ifdef PATH_COUNTING_ENABLED
-         n->InstallPathCounts();
+      n->InstallPathCounts();
 #endif
-      LayerMapHandle.Canonicalize();
       return G_CFLOBDDNodeHandle(n);
     }
   }
@@ -449,29 +365,29 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
                                  PairProductMapHandle &pairProductMapHandle
                                 )
 {
-  PairProductMemo cachedPairProductMemo;
+  PairProductMemo<G_CFLOBDDNodeHandle> cachedPairProductMemo;
 
-  auto key1 = PairProductKey(n1, n2);
-  auto key2 = PairProductKey(n2, n1);
+  auto key1 = PairProductKey<G_CFLOBDDNodeHandle>(n1, n2);
+  auto key2 = PairProductKey<G_CFLOBDDNodeHandle>(n2, n1);
 
-  bool isCached = pairProductCache.find(key1) != pairProductCache.end();
+  // bool isCached = pairProductCache.find(key1) != pairProductCache.end();
+  bool isCached = pairProductCache->Fetch(key1, cachedPairProductMemo);
 
   if (isCached) {
-    auto memo = pairProductCache.at(key1);
+    auto memo = cachedPairProductMemo;
     pairProductMapHandle = memo.pairProductMapHandle;
     return memo.nodeHandle;
   }
-  else if (pairProductCache.find(key2) != pairProductCache.end()) {
-    auto memo = pairProductCache.at(key2);
-    pairProductMapHandle = memo.pairProductMapHandle.Flip();
-    return memo.nodeHandle;
-}
+  else if (pairProductCache->Fetch(key2, cachedPairProductMemo)) {
+    pairProductMapHandle = cachedPairProductMemo.pairProductMapHandle.Flip();
+    return cachedPairProductMemo.nodeHandle;
+  }
   else {
     G_CFLOBDDNodeHandle answer;
 
     if (n1.handleContents->NodeKind() == G_CFLOBDD_INTERNAL) {
-      answer = PairProduct(std::dynamic_pointer_cast<G_CFLOBDDInternalNode>(n1.handleContents),
-                           std::dynamic_pointer_cast<G_CFLOBDDInternalNode>(n2.handleContents),
+      answer = PairProduct(static_cast<G_CFLOBDDInternalNode*>(n1.handleContents),
+                           static_cast<G_CFLOBDDInternalNode*>(n2.handleContents),
                            pairProductMapHandle
                           );
     }
@@ -489,7 +405,7 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
         answer = n1;
       }
     }
-    else { /* n1.handleContents->NodeKind() == G_CFLOBDD_DONTCARE */
+    else if (n1.handleContents->NodeKind() == G_CFLOBDD_DONTCARE) { /* n1.handleContents->NodeKind() == G_CFLOBDD_DONTCARE */
       if (n2.handleContents->NodeKind() == G_CFLOBDD_FORK) {                 // G_CFLOBDD_DONTCARE, G_CFLOBDD_FORK
         pairProductMapHandle.AddToEnd(intpair(0,0));
         pairProductMapHandle.AddToEnd(intpair(0,1));
@@ -502,6 +418,20 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
         answer = n1;
       }
     }
+    else if (n1.handleContents->NodeKind() == G_CFLOBDD_BDD) {
+      if (n2.handleContents->NodeKind() == G_CFLOBDD_BDD) {                 // G_CFLOBDD_BDD, G_CFLOBDD_BDD
+        answer = PairProduct(static_cast<G_CFLOBDDBDDNode*>(n1.handleContents),
+                             static_cast<G_CFLOBDDBDDNode*>(n2.handleContents),
+                             pairProductMapHandle
+                            );
+      }
+      else {
+        throw std::runtime_error("PairProduct: Invalid node kinds");
+      }
+    }
+    else {
+      throw std::runtime_error("PairProduct: Invalid node kinds");
+    }
     // std::cout << "Input nodes:\n";
     // std::cout << "n1: \n";
     // n1.print(std::cout);
@@ -512,8 +442,8 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
     // std::cout << "Output node:\n";
     // answer.print(std::cout);
     // std::cout << "\n";
-    auto memo = PairProductMemo(answer, pairProductMapHandle);
-    pairProductCache.insert(std::make_pair(key1, memo));
+    auto memo = PairProductMemo<G_CFLOBDDNodeHandle>(answer, pairProductMapHandle);
+    pairProductCache->Insert(key1, memo);
     return answer;
   }
 }
@@ -521,10 +451,14 @@ G_CFLOBDDNodeHandle PairProduct(G_CFLOBDDNodeHandle n1,
 
 void InitPairProductCache()
 {
+  pairProductCache = new Hashtable<PairProductKey<G_CFLOBDDNodeHandle>, PairProductMemo<G_CFLOBDDNodeHandle>>(HASHSET_NUM_BUCKETS);
 }
 
 void DisposeOfPairProductCache()
 {
-  pairProductCache.clear();
+  // pairProductCache.clear();
+  delete pairProductCache;
+  pairProductCache = NULL;
 }
+
 } // namespace G_CFL_OBDD
