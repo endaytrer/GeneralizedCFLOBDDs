@@ -1,5 +1,17 @@
 # Project Name (executable)
-PROJECT = gcflobdd
+TARGET_EXE = gcflobdd
+TARGET_STATIC_LIB = libgcflobdd.a
+# Detect operating system
+UNAME_S := $(shell uname -s)
+
+# Set platform-specific library extension
+ifeq ($(UNAME_S),Darwin)
+    # macOS
+    TARGET_DYLIB = libgcflobdd.dylib
+else
+    TARGET_DYLIB = libgcflobdd.so
+endif
+
 # Compiler
 CC = g++
 SRC_DIR = src
@@ -9,46 +21,57 @@ OBJ_DIR = obj
 COMMANDLINE_OPTIONS = #/dev/ttyS0
 
 # Compiler options during compilation
-COMPILE_OPTIONS = -g -O3 -std=c++2a -w
+CFLAGS += -g -O3 -std=c++2a -w
+CFLAGS += -I$(SRC_DIR)/gcflobdd -I$(SRC_DIR)/utils/
+CFLAGS += $(shell pkg-config --cflags libgvc libcgraph)
 
-#Header include directories
-HEADERS = -I$(SRC_DIR)/gcflobdd -I$(SRC_DIR)/utils/
 #Libraries for linking
-LIBS = -I/usr/include/graphviz -L/usr/lib -lgvc -lcgraph
-
-# Dependency options
-DEPENDENCY_OPTIONS = -MM
+LIBS = $(shell pkg-config --libs libgvc libcgraph)
 
 #-- Do not edit below this line --
 
 # Subdirs to search for additional source files
-SOURCE_FILES += $(shell ls $(SRC_DIR)/gcflobdd/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/utils/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/ops/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/grammar/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/hardware_benchmarks/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/visualization/*.cpp)
-SOURCE_FILES += $(shell ls $(SRC_DIR)/*.cpp)
+SOURCE_FILES += $(wildcard $(SRC_DIR)/gcflobdd/*.cpp)
+SOURCE_FILES += $(wildcard $(SRC_DIR)/utils/*.cpp)
+SOURCE_FILES += $(wildcard $(SRC_DIR)/ops/*.cpp)
+SOURCE_FILES += $(wildcard $(SRC_DIR)/grammar/*.cpp)
+SOURCE_FILES += $(wildcard $(SRC_DIR)/visualization/*.cpp)
 # SOURCE_FILES += $(shell find . -maxdepth 1 -mindepth 1 -name \*.cpp -a -not -name main.cpp)
 
 # Create an object file of every cpp file
 OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SOURCE_FILES))
 
-# Make $(PROJECT) the default target
-all: $(PROJECT)
+EXE_SOURCE_FILES = $(SOURCE_FILES)
+EXE_SOURCE_FILES += $(wildcard $(SRC_DIR)/*.cpp)
+EXE_SOURCE_FILES += $(wildcard $(SRC_DIR)/hardware_benchmarks/*.cpp)
+# Create an object file of every cpp file
+EXE_OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(EXE_SOURCE_FILES))
 
-$(PROJECT): $(OBJECTS)
-	$(CC) -o $(PROJECT) $(OBJECTS) $(LIBS) -stdlib=libc++
+# Make $(PROJECT) the default target
+.PHONY: all static
+
+all: $(TARGET_DYLIB) $(TARGET_EXE)
+
+static: $(TARGET_STATIC_LIB)
+
+$(TARGET_EXE): $(EXE_OBJECTS)
+	$(CC) -o $(TARGET_EXE) $(EXE_OBJECTS) $(LIBS)
+
+$(TARGET_DYLIB): $(OBJECTS)
+	$(CC) -fPIC -shared -o $(TARGET_DYLIB) $(OBJECTS) $(LIBS)
+
+$(TARGET_STATIC_LIB): $(OBJECTS)
+	$(AR) rcs $@ $^
 
 # Compile every cpp file to an object
 # %.cpp
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CC) -c $(COMPILE_OPTIONS) -o $@ $^ $(HEADERS)
+	$(CC) -c $(CFLAGS) -o $@ $^
 
 # Build & Run Project
-run: $(PROJECT)
-	./$(PROJECT) $(COMMANDLINE_OPTIONS)
+run: $(TARGET_EXE)
+	./$(TARGET_EXE) $(COMMANDLINE_OPTIONS)
 
 # Clean & Debug
 .PHONY: makefile-debug
@@ -56,11 +79,4 @@ makefile-debug:
 
 .PHONY: clean
 clean:
-	rm -f $(PROJECT) $(OBJECTS)
-
-.PHONY: depclean
-depclean:
-	rm -f $(DEPENDENCIES)
-
-clean-all: clean depclean
-
+	rm -f $(TARGET_EXE) $(TARGET_DYLIB) $(TARGET_STATIC_LIB) $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
