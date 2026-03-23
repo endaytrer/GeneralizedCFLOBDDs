@@ -47,6 +47,7 @@ namespace G_CFL_OBDD{
 
         rootConnection = ConnectionT<ReturnMapHandle<T>>(n, mapHandle);
         level = n->level;
+        grammar = std::make_shared<Grammar>();
         grammar->root = n->grammar;
     }
 
@@ -77,6 +78,8 @@ namespace G_CFL_OBDD{
 
         rootConnection = ConnectionT<ReturnMapHandle<T>>(nodeHandle, mapHandle);
         level = nodeHandle.handleContents->level;
+        grammar = std::make_shared<Grammar>();
+        grammar->root = nodeHandle.handleContents->grammar;
     }
 
     template<typename T>

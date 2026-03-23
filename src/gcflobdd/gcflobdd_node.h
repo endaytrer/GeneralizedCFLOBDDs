@@ -204,6 +204,8 @@ class G_CFLOBDDNode {
   long double *numPathsToExit;
   bool isNumPathsMemAllocated;
 
+  virtual void FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index) = 0;
+  
   virtual G_CFLOBDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false) = 0;
   virtual unsigned int Hash(unsigned int modsize) const = 0;
 
@@ -247,7 +249,8 @@ class G_CFLOBDDInternalNode : public G_CFLOBDDNode {
   G_CFLOBDDInternalNode(const unsigned int l);   // Constructor
   ~G_CFLOBDDInternalNode();                      // Destructor
   G_CFLOBDD_NODEKIND NodeKind() const { return G_CFLOBDD_INTERNAL; }
-  
+  void FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index);
+
   G_CFLOBDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
   unsigned int Hash(unsigned int modsize) const;
   bool operator!= (const G_CFLOBDDNode & n) const;        // Overloaded !=
@@ -270,6 +273,7 @@ class G_CFLOBDDInternalNode : public G_CFLOBDDNode {
  private:
   G_CFLOBDDInternalNode();                                         // Default constructor (hidden)
   G_CFLOBDDInternalNode(const G_CFLOBDDInternalNode &n);             // Copy constructor (hidden)
+  bool fillSatisfyingAssignmentRecursive(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index, unsigned int layer_idx, unsigned int connection_idx) const;
   G_CFLOBDDInternalNode& operator= (const G_CFLOBDDInternalNode &n); // Overloaded = (hidden)
 };
 
@@ -306,6 +310,7 @@ class G_CFLOBDDForkNode : public G_CFLOBDDLeafNode {
   G_CFLOBDDForkNode();                   // Constructor
   ~G_CFLOBDDForkNode();                  // Destructor
   G_CFLOBDD_NODEKIND NodeKind() const { return G_CFLOBDD_FORK; }
+  void FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index);
   G_CFLOBDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
   unsigned int Hash(unsigned int modsize) const;
   bool operator!= (const G_CFLOBDDNode & n) const;        // Overloaded !=
@@ -329,6 +334,7 @@ class G_CFLOBDDDontCareNode : public G_CFLOBDDLeafNode {
   G_CFLOBDDDontCareNode();                   // Constructor
   ~G_CFLOBDDDontCareNode();                  // Destructor
   G_CFLOBDD_NODEKIND NodeKind() const { return G_CFLOBDD_DONTCARE; }
+  void FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index);
   G_CFLOBDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
   unsigned int Hash(unsigned int modsize) const;
   bool operator!= (const G_CFLOBDDNode & n) const;        // Overloaded !=

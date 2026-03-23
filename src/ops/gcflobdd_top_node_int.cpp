@@ -9,12 +9,29 @@
 #include "../gcflobdd/gcflobdd_node.h"
 #include "gcflobdd_node_ops.h"
 #include "../gcflobdd/return_map_T.h"
+#include "../utils/assignment.h"
 
 //********************************************************************
 // G_CFLOBDDTopNode
 //********************************************************************
 
 namespace G_CFL_OBDD {
+
+
+template <>
+bool G_CFLOBDDTopNodeT<int>::FindOneSatisfyingAssignment(SH_OBDD::Assignment * &assignment)
+{
+  for (unsigned int i = 0; i < rootConnection.entryPointHandle->handleContents->numExits; i++) {
+    unsigned int k = rootConnection.returnMapHandle.Lookup(i);
+    if (k == 1) {
+      unsigned int size = grammar->root->numVars;
+      assignment = new SH_OBDD::Assignment(size);
+      rootConnection.entryPointHandle->handleContents->FillSatisfyingAssignment(i, *assignment, size);
+      return true;
+    }
+  }
+  return false;
+}
 
 template class G_CFLOBDDTopNodeT<int>;
 

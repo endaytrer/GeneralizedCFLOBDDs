@@ -31,6 +31,19 @@ unsigned int G_CFLOBDDBDDNode::Hash(unsigned int modsize) const
   return hashValue;
 }
 
+void G_CFLOBDDBDDNode::FillSatisfyingAssignment(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  // There is no return map, the value is returned as-is.
+  if (!this->bddSection.entryPointHandle->handleContents->FindOneSatisfyingAssignment(exitNumber, assignment, index)) {
+    std::cerr << "Failure in G_CFLOBDDBDDNode::FillSatisfyingAssignment:" << std::endl;
+    std::cerr << "  exitNumber = " << exitNumber << std::endl;
+    //std::cerr << "  assignment = " << assignment << std::endl;  ETTODO - Fix
+    std::cerr << "  index = " << index << std::endl;
+    abort();
+  }
+}
+
+
 G_CFLOBDDNodeHandle G_CFLOBDDBDDNode::Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce)
 {
   G_CFLOBDDBDDNode* reducedNode = new G_CFLOBDDBDDNode(numVars);
@@ -384,6 +397,20 @@ bool BDDInternalNode::operator== (const BDDNode & n) const
   return true;
 }
 
+bool BDDInternalNode::FindOneSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  if (thenBranch.handleContents->FindOneSatisfyingAssignment(i, assignment, index)) {
+    index--;
+    assignment[index] = 1;
+    return true;
+  }
+  if (elseBranch.handleContents->FindOneSatisfyingAssignment(i, assignment, index)) {
+    index--;
+    assignment[index] = 0;
+    return true;
+  }
+  return false;
+}
 // Reduce
 BDDNodeHandle BDDInternalNode::Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce)
 {
@@ -481,6 +508,11 @@ bool BDDLeafNode::operator== (const BDDNode & n) const
   if (value != m.value)
     return false;
   return true;
+}
+
+bool BDDLeafNode::FindOneSatisfyingAssignment(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  return exitNumber == value;
 }
 
 BDDNodeHandle BDDLeafNode::Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce)

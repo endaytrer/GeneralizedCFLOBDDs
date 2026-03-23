@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "gcflobdd_node.h"
+#include "../utils/assignment.h"
 
 #include "sectionT.h"
 namespace G_CFL_OBDD {
@@ -21,6 +22,8 @@ class G_CFLOBDDBDDNode : public G_CFLOBDDNode {
   ~G_CFLOBDDBDDNode();                      // Destructor
   G_CFLOBDD_NODEKIND NodeKind() const { return G_CFLOBDD_BDD; }
   unsigned int Hash(unsigned int modsize) const;
+  void FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index);
+
   G_CFLOBDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
   bool operator!= (const G_CFLOBDDNode & n) const;        // Overloaded !=
   bool operator== (const G_CFLOBDDNode & n) const;        // Overloaded ==
@@ -101,6 +104,7 @@ class BDDNode {
  public:
     virtual std::ostream& print(std::ostream & out = std::cout) const = 0;
     virtual void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const = 0;
+    virtual bool FindOneSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index) = 0;
     virtual BDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false) = 0;
 
  protected:
@@ -124,6 +128,7 @@ class BDDInternalNode : public BDDNode {
  public:
     std::ostream& print(std::ostream & out = std::cout) const;
     void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const;
+    bool FindOneSatisfyingAssignment(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index);
     BDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
   BDDNodeHandle thenBranch;
   BDDNodeHandle elseBranch;
@@ -145,6 +150,7 @@ class BDDLeafNode : public BDDNode {
  public:
     std::ostream& print(std::ostream & out = std::cout) const;
     void PrintYield(std::unordered_map<int, std::vector<std::string>>& yield_strings) const;
+    bool FindOneSatisfyingAssignment(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index);
     BDDNodeHandle Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce = false);
 
   unsigned int value;

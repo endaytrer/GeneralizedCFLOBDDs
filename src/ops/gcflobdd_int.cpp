@@ -77,7 +77,7 @@ G_CFLOBDD MkNot(G_CFLOBDD f)
 G_CFLOBDD MkAnd(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);   
+    assert(*f.root->grammar == *g.root->grammar);   
     return G_CFLOBDD(MkAnd(f.root, g.root));
 }
 
@@ -85,7 +85,7 @@ G_CFLOBDD MkAnd(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkNand(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     // return MkNot(MkAnd(f.root, g.root));
     return G_CFLOBDD(MkNand(f.root, g.root));
 }
@@ -102,7 +102,7 @@ G_CFLOBDD MkOr(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkNor(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     // return MkNot(MkOr(f.root, g.root));
     return G_CFLOBDD(MkNor(f.root, g.root));
 }
@@ -111,7 +111,7 @@ G_CFLOBDD MkNor(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkIff(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkIff(f.root, g.root));
 }
 
@@ -119,7 +119,7 @@ G_CFLOBDD MkIff(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkExclusiveOr(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkExclusiveOr(f.root, g.root));
 }
 
@@ -127,7 +127,7 @@ G_CFLOBDD MkExclusiveOr(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkImplies(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkImplies(f.root, g.root));
 }
 
@@ -135,7 +135,7 @@ G_CFLOBDD MkImplies(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkMinus(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkMinus(f.root, g.root));
 }
 
@@ -143,7 +143,7 @@ G_CFLOBDD MkMinus(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkQuotient(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkQuotient(f.root, g.root));
 }
 
@@ -151,7 +151,7 @@ G_CFLOBDD MkQuotient(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkNotQuotient(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkNotQuotient(f.root, g.root));
 }
 
@@ -159,7 +159,7 @@ G_CFLOBDD MkNotQuotient(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkFirst(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkFirst(f.root, g.root));
 }
 
@@ -167,7 +167,7 @@ G_CFLOBDD MkFirst(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkNotFirst(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
     return G_CFLOBDD(MkNotFirst(f.root, g.root));
 }
 
@@ -187,7 +187,7 @@ G_CFLOBDD MkNotSecond(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkPlus(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
 	return G_CFLOBDD(MkPlus(f.root, g.root));
 }
 
@@ -195,7 +195,7 @@ G_CFLOBDD MkPlus(G_CFLOBDD f, G_CFLOBDD g)
 G_CFLOBDD MkTimes(G_CFLOBDD f, G_CFLOBDD g)
 {
     assert(f.root->level == g.root->level);
-    assert(f.root->grammar == g.root->grammar);
+    assert(*f.root->grammar == *g.root->grammar);
 	return G_CFLOBDD(MkTimes(f.root, g.root));
 }
 

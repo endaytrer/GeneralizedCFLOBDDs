@@ -408,6 +408,41 @@ G_CFLOBDDReturnMapHandle ComposeAndReduce(G_CFLOBDDReturnMapHandle& mapHandle, R
 	return answer;
 }
 
+bool G_CFLOBDDInternalNode::fillSatisfyingAssignmentRecursive(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index, unsigned int layer_idx, unsigned int connection_idx) const
+{
+  ConnectionList &current_connection_list = connections[layer_idx];
+  Connection &current_connection = current_connection_list[connection_idx];
+  if (layer_idx == numLayers - 1) {
+    for (unsigned int j = 0; j < current_connection.entryPointHandle->handleContents->numExits; j++) {
+      unsigned int k = current_connection.returnMapHandle.Lookup(j);
+      if (k == exitNumber) {
+        current_connection.entryPointHandle->handleContents->FillSatisfyingAssignment(j, assignment, index);
+        return true;
+      }
+    }
+    return false;
+  }
+  for (unsigned int i = 0; i < current_connection.entryPointHandle->handleContents->numExits; i++) {
+    if (fillSatisfyingAssignmentRecursive(exitNumber, assignment, index, layer_idx + 1, i)) {
+      current_connection.entryPointHandle->handleContents->FillSatisfyingAssignment(i, assignment, index);
+      return true;
+    }
+  }
+  return false;
+}
+
+void G_CFLOBDDInternalNode::FillSatisfyingAssignment(unsigned int exitNumber, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  assert(connections[0].numConnections == 1);
+  if (!fillSatisfyingAssignmentRecursive(exitNumber, assignment, index, 0, 0)) {
+    std::cerr << "Failure in G_CFLOBDDInternalNode::FillSatisfyingAssignment:" << std::endl;
+    std::cerr << "  exitNumber = " << exitNumber << std::endl;
+    //std::cerr << "  assignment = " << assignment << std::endl;  ETTODO - Fix
+    std::cerr << "  index = " << index << std::endl;
+    abort();
+  }
+}
+
 G_CFLOBDDNodeHandle G_CFLOBDDInternalNode::Reduce(ReductionMapHandle& redMapHandle, unsigned int replacementNumExits, bool forceReduce)
 {
   G_CFLOBDDInternalNode* n = new G_CFLOBDDInternalNode(level);
@@ -687,6 +722,13 @@ std::ostream& G_CFLOBDDForkNode::print(std::ostream & out) const
   return out;
 }
 
+void G_CFLOBDDForkNode::FillSatisfyingAssignment(unsigned int i, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  assert(i <= 1);
+  index--;
+  assignment[index] = i;
+}
+
 G_CFLOBDDNodeHandle G_CFLOBDDForkNode::Reduce(ReductionMapHandle&, unsigned int replacementNumExits, bool forceReduce)
 {
 	if (forceReduce){
@@ -755,6 +797,13 @@ std::ostream& G_CFLOBDDDontCareNode::print(std::ostream & out) const
   out << "Don't care";
   return out;
 }
+
+void G_CFLOBDDDontCareNode::FillSatisfyingAssignment(unsigned int, SH_OBDD::Assignment &assignment, unsigned int &index)
+{
+  index--;
+  assignment[index] = 0;
+}
+
 
 G_CFLOBDDNodeHandle G_CFLOBDDDontCareNode::Reduce(ReductionMapHandle&, unsigned int, bool)
 {

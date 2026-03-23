@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include "../utils/ref_ptr.h"
+#include "../utils/assignment.h"
 #include "connectionT.h"
 #include "gcflobdd_node.h"
 #include "../utils/bool_op.h"
@@ -46,6 +47,7 @@ class G_CFLOBDDTopNodeT {
 
   void CountPaths(Hashset<G_CFLOBDDNodeHandle>* visitedNodes);
   void PrintYield(std::ostream & out = std::cout) const;
+  bool FindOneSatisfyingAssignment(SH_OBDD::Assignment * &assignment);
 
   // Usage: G_CFLOBDDTopNodeT<T>::G_CFLOBDDTopNodeTRefPtr
   typedef ref_ptr<G_CFLOBDDTopNodeT<T>> G_CFLOBDDTopNodeTRefPtr;

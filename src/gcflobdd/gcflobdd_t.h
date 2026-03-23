@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "../utils/ref_ptr.h"
+#include "../utils/assignment.h"
 #include "gcflobdd_top_node_t.h"
 
 namespace G_CFL_OBDD {
@@ -31,6 +32,7 @@ class G_CFLOBDD_T {
   void GroupCountNodesAndEdges(unsigned int &nodeCount, unsigned int &edgeCount, Hashset<G_CFLOBDDNodeHandle>* visitedNodesDuringGroupCountNodesAndEdges,
 	  Hashset<G_CFLOBDDReturnMapBody>* visitedEdgesDuringGroupCountNodesAndEdges);
   void PrintYield(std::ostream & out = std::cout) const;
+  bool FindOneSatisfyingAssignment(SH_OBDD::Assignment * &assignment);   // Find a satisfying assignment
 
  public:
 	std::ostream& print(std::ostream & out = std::cout) const;
@@ -119,6 +121,20 @@ template<typename T>
 void G_CFLOBDD_T<T>::PrintYield(std::ostream & out) const
 {
 	root->PrintYield(out);
+}
+
+// FindOneSatisfyingAssignment
+//
+// If a satisfying assignment exists, allocate and place such an
+//    assignment in variable "assignment" and return true.
+// Otherwise return false.
+//
+// Running time: Linear in the number of variables
+//
+template<typename T>
+bool G_CFLOBDD_T<T>::FindOneSatisfyingAssignment(SH_OBDD::Assignment * &assignment)
+{
+	return root->FindOneSatisfyingAssignment(assignment);
 }
 
 // Linear operations -----------------------------------------------

@@ -34,6 +34,7 @@ public:
     static void testC6288_16(unsigned int grammarChoice);
     static void testNQueens(unsigned int n, unsigned int grammarChoice);
     static void testBDDGrammar();
+    static void testGetOneSatisfyingAssignment();
 };
 
 #endif // TESTS_H

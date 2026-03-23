@@ -1559,6 +1559,40 @@ void Tests::testBDDGrammar() {
     // gat23.PrintYield();
 }
 
+void Tests::testGetOneSatisfyingAssignment() {
+    std::shared_ptr<Grammar> grammar = std::make_shared<Grammar>();
+    
+    std::vector<std::string> productions = {
+        "S 6 -> S 5 S 5 S 4", // 100
+        "S 5 -> S 4 S 4", // 40
+        "S 4 -> S 3 S 3", // 20
+        "S 3 -> S 2 S 2 S 1", // 10
+        "S 2 -> S 1 S 1", // 4
+        "S 1 -> S 0 S 0", // 2
+        "S 0 -> a"
+    };
+    grammar->constructGrammar(productions, "S 6");
+    grammar->InstallNumVars();
+    grammar->updateLevel();
+    G_CFLOBDD gat1 = MkProjection(0, grammar->root->level, grammar);
+    G_CFLOBDD gat2 = MkProjection(1, grammar->root->level, grammar);
+    G_CFLOBDD gat3 = MkProjection(2, grammar->root->level, grammar);
+    G_CFLOBDD gat6 = MkProjection(3, grammar->root->level, grammar);
+    G_CFLOBDD gat7 = MkProjection(4, grammar->root->level, grammar);
+    G_CFLOBDD gat10 = MkNand(gat1, gat3);
+    G_CFLOBDD gat11 = MkNand(gat3, gat6);
+
+    SH_OBDD::Assignment *assignment = nullptr;
+    bool satisfiable = gat11.FindOneSatisfyingAssignment(assignment);
+    assert(satisfiable);
+    assert(assignment != nullptr);
+    bool *data = assignment->get_data();
+    unsigned int size = assignment->get_size();
+    for (unsigned int i = 0; i < size; i++) {
+        std::cout << "x_" << i << " = " << (data[i] ? "true" : "false") << std::endl;
+    }
+}
+
 void RunInit() {
     G_CFLOBDDNodeHandle::InitLeafNodes();
     InitPairProductCache();
@@ -1635,8 +1669,9 @@ void Tests::runTests(std::string testName, unsigned int grammarChoice, unsigned 
         testNQueens(n, grammarChoice);
     } else if (testName == "testBDDGrammar") {
         testBDDGrammar();
-    }
-    else {
+    } else if (testName == "testGetOneSatisfyingAssignment") {
+        testGetOneSatisfyingAssignment();
+    } else {
         std::cout << "Unknown test name: " << testName << std::endl;
     }
     ClearUp();
