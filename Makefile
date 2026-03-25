@@ -13,7 +13,7 @@ else
 endif
 
 # Compiler
-CC = g++
+CXX = g++
 SRC_DIR = src
 OBJ_DIR = obj
 
@@ -21,9 +21,9 @@ OBJ_DIR = obj
 COMMANDLINE_OPTIONS = #/dev/ttyS0
 
 # Compiler options during compilation
-CFLAGS += -g -O3 -std=c++2a -w
-CFLAGS += -I$(SRC_DIR)/gcflobdd -I$(SRC_DIR)/utils/
-CFLAGS += $(shell pkg-config --cflags libgvc libcgraph)
+CXXFLAGS += -g -Wall -Wextra -O3 -std=c++2a -w
+CXXFLAGS += -I$(SRC_DIR)/gcflobdd -I$(SRC_DIR)/utils/
+CXXFLAGS += $(shell pkg-config --cflags libgvc libcgraph)
 
 #Libraries for linking
 LIBS = $(shell pkg-config --libs libgvc libcgraph)
@@ -40,12 +40,14 @@ SOURCE_FILES += $(wildcard $(SRC_DIR)/visualization/*.cpp)
 
 # Create an object file of every cpp file
 OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SOURCE_FILES))
+DEPENDS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(SOURCE_FILES))
 
 EXE_SOURCE_FILES = $(SOURCE_FILES)
 EXE_SOURCE_FILES += $(wildcard $(SRC_DIR)/*.cpp)
 EXE_SOURCE_FILES += $(wildcard $(SRC_DIR)/hardware_benchmarks/*.cpp)
 # Create an object file of every cpp file
 EXE_OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(EXE_SOURCE_FILES))
+EXE_DEPENDS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(EXE_SOURCE_FILES))
 
 # Make $(PROJECT) the default target
 .PHONY: all static
@@ -55,19 +57,27 @@ all: $(TARGET_DYLIB) $(TARGET_EXE)
 static: $(TARGET_STATIC_LIB)
 
 $(TARGET_EXE): $(EXE_OBJECTS)
-	$(CC) -o $(TARGET_EXE) $(EXE_OBJECTS) $(LIBS)
+	$(CXX) -o $(TARGET_EXE) $(EXE_OBJECTS) $(LIBS)
 
 $(TARGET_DYLIB): $(OBJECTS)
-	$(CC) -fPIC -shared -o $(TARGET_DYLIB) $(OBJECTS) $(LIBS)
+	$(CXX) -fPIC -shared -o $(TARGET_DYLIB) $(OBJECTS) $(LIBS)
 
 $(TARGET_STATIC_LIB): $(OBJECTS)
 	$(AR) rcs $@ $^
 
 # Compile every cpp file to an object
+# consider its dependencies
+$(OBJ_DIR)/%.d: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MM $^ -MT $(OBJ_DIR)/$*.o -o $@
+
+-include $(EXE_DEPENDS)
+
 # %.cpp
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CC) -c $(CFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
 
 # Build & Run Project
 run: $(TARGET_EXE)
@@ -79,4 +89,4 @@ makefile-debug:
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET_EXE) $(TARGET_DYLIB) $(TARGET_STATIC_LIB) $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
+	rm -f $(TARGET_EXE) $(TARGET_DYLIB) $(TARGET_STATIC_LIB) $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o $(OBJ_DIR)/*/*.d $(OBJ_DIR)/*.d
