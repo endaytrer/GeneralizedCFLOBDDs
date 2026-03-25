@@ -182,16 +182,16 @@ GCFLOBDD_C_API uint32_t GCFLOBDD_numSatisfyingAssignments(const GCFLOBDD_Ref gcf
 
 GCFLOBDD_C_API ssize_t GCFLOBDD_getOneSatisfyingAssignment(const GCFLOBDD_Ref gcflobdd, bool *assignment_buffer, size_t assignment_buffer_size) {
     auto a1 = retrieve(gcflobdd);
-    uint32_t level_size = 1 << ((*a1.root).level);
-    uint32_t level_start = (1 << G_CFL_OBDD::G_CFLOBDD::maxLevel) - level_size;
+    uint32_t num_vars = a1.root->grammar->root->numVars;
     SH_OBDD::Assignment *assignment;
     bool ans = a1.FindOneSatisfyingAssignment(assignment);
     forget(std::move(a1));
     if (!ans) {
         return 0;
     }
-    size_t copy_size = assignment_buffer_size < level_size ? assignment_buffer_size : level_size;
-    memcpy(assignment_buffer, assignment->get_data() + level_start, copy_size);
+    // Only copies min(assignment_buffer_size, num_vars) bytes
+    size_t copy_size = assignment_buffer_size < num_vars ? assignment_buffer_size : num_vars;
+    memcpy(assignment_buffer, assignment->get_data(), copy_size);
     delete assignment;
     return copy_size;
 }

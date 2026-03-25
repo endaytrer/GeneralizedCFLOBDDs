@@ -234,16 +234,16 @@ public class BDD {
         System.err.println("not implemented");
         return 0;
     }
-    // public void oneSat(int bdd, int[] arr) {
-    //     int[] ans = bddtable.get(bdd).oneSat();
-    //     if (arr == null) {
-    //         arr = ans;
-    //     } else {
-    //         for (int i = 0; i < arr.length; i++) {
-    //             arr[i] = ans[i];
-    //         }
-    //     }
-    // }
+    public void oneSat(int bdd, int[] arr) {
+        int[] ans = bddtable.get(bdd).oneSat();
+        if (arr == null) {
+            arr = ans;
+        } else {
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = ans[i];
+            }
+        }
+    }
     // public boolean isValid(int bdd) {
     //     return bddtable.get(bdd).isValid();
     // }
